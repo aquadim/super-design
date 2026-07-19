@@ -1,0 +1,293 @@
+from enum import Enum
+import properties
+from gi.repository import GObject
+
+
+def translate_enum(*args):
+    translation = {}
+    for i in range(1,len(args)):
+        if i % 2 == 0:
+            translation[args[i - 1]] = args[i]
+    if not args[0] in translation:
+        return "..."
+    return translation[args[0]]
+
+
+class NodeType(Enum):
+    CONFIGURATION = 1
+    LANGUAGE = 2
+    STORAGE = 3
+    CATALOG = 4
+
+    def written(self):
+        if self == NodeType.CONFIGURATION:
+            return "Конфигурация"
+        elif self == NodeType.LANGUAGE:
+            return "Язык"
+        elif self == NodeType.CATALOG:
+            return "Справочник"
+
+
+class CategoryType(Enum):
+    GENERAL     = 1
+    DEVELOPMENT = 2
+    LANG        = 3
+    HIERARCHY   = 4
+    HELP        = 5
+
+    def written(self):
+        return translate_enum(
+            self,
+            CategoryType.GENERAL, "📝 Общее",
+            CategoryType.DEVELOPMENT, "👨‍💻 Разработка",
+            CategoryType.LANG, "💬 Язык",
+            CategoryType.HIERARCHY, "📶 Иерархия",
+            CategoryType.HELP, "🛟 Справочная информация",
+        )
+
+    # Возвращает вес категории. 0 - минимум, 10001 - максимум
+    def weight(self):
+        if self == CategoryType.GENERAL:
+            return 0
+        elif self == CategoryType.DEVELOPMENT:
+            return 8000
+        elif self == CategoryType.LANG:
+            return 100
+        elif self == CategoryType.HIERARCHY:
+            return 300
+        elif self == CategoryType.HELP:
+            return 10000
+        return 10001
+
+
+class DefaultRunMode(Enum):
+    ManagedApplication = 0
+    OrdinaryApplication = 1
+
+    def written(self):
+        return translate_enum(
+            self,
+            DefaultRunMode.ManagedApplication, "Управляемое приложение",
+            DefaultRunMode.OrdinaryApplication, "Обычное приложение"
+        )
+
+
+class ConfigurationExtensionCompatibilityMode(Enum):
+    Version8_5_4 = 1
+
+    def written(self):
+        return translate_enum(
+            self,
+            ConfigurationExtensionCompatibilityMode.Version8_5_4, "8.5.4"
+        )
+
+
+class HierarchyType(Enum):
+    HierarchyFoldersAndItems = 1
+    HierarchyOfItems = 2
+
+    def written(self):
+        return translate_enum(
+            self,
+            HierarchyType.HierarchyFoldersAndItems, "Иерархия групп и элементов",
+            HierarchyType.HierarchyOfItems, "Иерархия элементов",
+        )
+
+
+# Узел конфигурации
+class Node(GObject.Object):
+    __slots__ = ['id', 'Synonym', 'Comment', 'node_type', 'children']
+    __gtype_name__ = 'DataObject'
+    emoji = "👽"
+    can_display_properties_page = False
+
+    name = GObject.Property(type=str, default=None)
+
+    def __init__(self, id, Name, Synonym, Comment, node_type, children=[]):
+        super().__init__()
+        self.id = id
+        self.name = Name
+        self.Synonym = Synonym
+        self.Comment = Comment
+        self.node_type = node_type
+        self.children = children
+
+    def get_properties(self):
+        return [
+            properties.BindTextProperty(CategoryType.GENERAL, self, 'name', self.name, "Имя"),
+            properties.LocalisedStringProperty(CategoryType.GENERAL, self, 'Synonym', self.Synonym, "Синоним"),
+            properties.SimpleTextProperty(CategoryType.GENERAL, self, 'Comment', self.Comment, "Комментарий"),
+        ]
+
+    def modify_page(self, page):
+        pass
+
+
+# Корневой узел
+class RootNode(Node):
+    __slots__ = [
+        'ConfigurationExtensionCompatibilityMode',
+        'default_run_mode',
+        'Vendor',
+        'Version',
+        'UseManagedFormInOrdinaryApplication',
+        'UseOrdinaryFormInManagedApplication',
+        'UpdateCatalogAddress',
+        'IncludeHelpInContents',
+        'HelpHTMLContent',
+
+        'store_lang',
+        'store_catalog'
+    ]
+    emoji = "🟡"
+    can_display_properties_page = True
+
+    def __init__(
+        self,
+        Name,
+        Synonym,
+        Comment,
+        IncludeHelpInContents,
+        HelpHTMLContent,
+        ConfigurationExtensionCompatibilityMode,
+        DefaultRunMode,
+        Vendor,
+        Version,
+        UpdateCatalogAddress,
+        UseManagedFormInOrdinaryApplication,
+        UseOrdinaryFormInManagedApplication):
+
+        # Хранилища объектов
+        self.store_lang = StoreNode("📁💬", "Языки")
+        self.store_catalog = StoreNode("📁 📦", "Справочники")
+
+        super().__init__(
+            "root",
+            Name,
+            Synonym,
+            Comment,
+            NodeType.CONFIGURATION,
+            [
+                self.store_lang,
+                self.store_catalog
+            ]
+        )
+        self.IncludeHelpInContents = IncludeHelpInContents
+        self.HelpHTMLContent = HelpHTMLContent
+        self.ConfigurationExtensionCompatibilityMode = ConfigurationExtensionCompatibilityMode
+        self.default_run_mode = DefaultRunMode
+        self.vendor = Vendor
+        self.version = Version
+        self.UseManagedFormInOrdinaryApplication = UseManagedFormInOrdinaryApplication
+        self.UseOrdinaryFormInManagedApplication = UseOrdinaryFormInManagedApplication
+        self.UpdateCatalogAddress = UpdateCatalogAddress
+
+    def get_properties(self):
+        return super().get_properties() + [
+            properties.EnumProperty(CategoryType.GENERAL, self, 'default_run_mode', self.default_run_mode, "Основной режим запуска"),
+            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'vendor', self.vendor, "Поставщик"),
+            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'version', self.version, "Версия"),
+            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'UpdateCatalogAddress', self.UpdateCatalogAddress, "Адрес каталога обновлений"),
+            properties.BoolProperty(CategoryType.GENERAL, self, 'UseManagedFormInOrdinaryApplication', self.UseManagedFormInOrdinaryApplication, "Использовать управляемые формы в обычном приложении"),
+            properties.BoolProperty(CategoryType.GENERAL, self, 'UseOrdinaryFormInManagedApplication', self.UseOrdinaryFormInManagedApplication, "Использовать обычные формы в управляемом приложении"),
+            properties.BoolProperty(CategoryType.HELP, self, 'IncludeHelpInContents', self.IncludeHelpInContents, "Включать в содержание справки"),
+            properties.SimpleTextProperty(CategoryType.HELP, self, 'HelpHTMLContent', self.HelpHTMLContent, "Справка")
+        ]
+
+# Узел для хранения чего-либо
+class StoreNode(Node):
+    __slots__ = []
+    emoji = "📁"
+    can_display_properties_page = False
+
+    def __init__(self, emoji, name):
+        super().__init__(
+            "store"+name,
+            name,
+            None,
+            None,
+            NodeType.STORAGE,
+            []
+        )
+        self.emoji = emoji
+
+    def get_properties(self):
+        return []
+
+# Язык
+class LanguageNode(Node):
+    __slots__ = ['language_code',]
+    emoji = '💬'
+    can_display_properties_page = True
+
+    def __init__(self, name, synonym, comment, language_code):
+        super().__init__(
+            f"lang:{language_code}",
+            name,
+            synonym,
+            comment,
+            NodeType.LANGUAGE,
+            []
+        )
+        self.language_code = language_code
+
+    def get_properties(self):
+        return super().get_properties() + [
+            properties.SimpleTextProperty(CategoryType.LANG, self, 'language_code', self.language_code, "Код языка")
+        ]
+
+# Справочник
+class CatalogNode(Node):
+    __slots__ = [
+        'Hierarchical',
+        'HierarchyType',
+        'LimitLevelCount',
+        'LevelCount',
+        'FoldersOnTop',
+    ]
+    emoji = '📦'
+    can_display_properties_page = True
+
+    def __init__(
+        self,
+        name,
+        Synonym,
+        Comment,
+        Hierarchical,
+        HierarchyType,
+        LimitLevelCount,
+        LevelCount,
+        FoldersOnTop,
+    ):
+
+        super().__init__(
+            f"catalog:{name}",
+            name,
+            Synonym,
+            Comment,
+            NodeType.CATALOG,
+            []
+        )
+        self.Hierarchical = Hierarchical
+        self.HierarchyType = HierarchyType
+        self.LimitLevelCount = LimitLevelCount
+        self.LevelCount = LevelCount
+        self.FoldersOnTop = FoldersOnTop
+
+    def get_properties(self):
+        return super().get_properties() + [
+            properties.BoolProperty(CategoryType.HIERARCHY, self, 'Hierarchical', self.Hierarchical, "Иерархический справочник"),
+            properties.EnumProperty(CategoryType.HIERARCHY, self, 'HierarchyType', self.HierarchyType, "Вид иерархии"),
+            properties.BoolProperty(CategoryType.HIERARCHY, self, 'FoldersOnTop', self.FoldersOnTop, "Помещать группы сверху"),
+            properties.BoolProperty(CategoryType.HIERARCHY, self, 'LimitLevelCount', self.LimitLevelCount, "Ограничить количество уровней иерархии"),
+            properties.NumProperty(CategoryType.HIERARCHY, self, 'LevelCount', self.LevelCount, "Количество уровней иерархии",1,None,1),
+        ]
+
+    def modify_page(self, page):
+        print("Y")
+
+
+def get_transform_func(node):
+    def func(binding, value):
+        return f'{node.emoji} {node.node_type.written()} "{value}"'
+    return func
