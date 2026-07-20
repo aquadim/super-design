@@ -1,5 +1,6 @@
 from enum import Enum
 import properties
+import observable
 from gi.repository import GObject
 
 
@@ -175,9 +176,9 @@ class RootNode(Node):
         self.IncludeHelpInContents = IncludeHelpInContents
         self.HelpHTMLContent = HelpHTMLContent
         self.ConfigurationExtensionCompatibilityMode = ConfigurationExtensionCompatibilityMode
-        self.default_run_mode = DefaultRunMode
-        self.vendor = Vendor
-        self.version = Version
+        self.DefaultRunMode = DefaultRunMode
+        self.Vendor = Vendor
+        self.Version = Version
         self.UseManagedFormInOrdinaryApplication = UseManagedFormInOrdinaryApplication
         self.UseOrdinaryFormInManagedApplication = UseOrdinaryFormInManagedApplication
         self.UpdateCatalogAddress = UpdateCatalogAddress
@@ -194,6 +195,7 @@ class RootNode(Node):
             properties.SimpleTextProperty(CategoryType.HELP, self, 'HelpHTMLContent', self.HelpHTMLContent, "Справка")
         ]
 
+
 # Узел для хранения чего-либо
 class StoreNode(Node):
     __slots__ = []
@@ -207,34 +209,36 @@ class StoreNode(Node):
             None,
             None,
             NodeType.STORAGE,
-            []
+            observable.ObservableList([])
         )
         self.emoji = emoji
 
     def get_properties(self):
         return []
 
+
 # Язык
 class LanguageNode(Node):
-    __slots__ = ['language_code',]
+    __slots__ = ['LanguageCode',]
     emoji = '💬'
     can_display_properties_page = True
 
-    def __init__(self, name, synonym, comment, language_code):
+    def __init__(self, name, Synonym, Comment, LanguageCode):
         super().__init__(
-            f"lang:{language_code}",
+            f"lang:{LanguageCode}",
             name,
-            synonym,
-            comment,
+            Synonym,
+            Comment,
             NodeType.LANGUAGE,
             []
         )
-        self.language_code = language_code
+        self.LanguageCode = LanguageCode
 
     def get_properties(self):
         return super().get_properties() + [
-            properties.SimpleTextProperty(CategoryType.LANG, self, 'language_code', self.language_code, "Код языка")
+            properties.SimpleTextProperty(CategoryType.LANG, self, 'LanguageCode', self.LanguageCode, "Код языка")
         ]
+
 
 # Справочник
 class CatalogNode(Node):
@@ -259,7 +263,6 @@ class CatalogNode(Node):
         LevelCount,
         FoldersOnTop,
     ):
-
         super().__init__(
             f"catalog:{name}",
             name,

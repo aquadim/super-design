@@ -44,7 +44,7 @@ class SuperDesign(Gtk.Application):
             return
 
         props = node.get_properties()
-        page, refs = widgets.get_properties_page(props)
+        page, refs = widgets.get_properties_page(props, self.configuration)
 
         tab_box, tab_label = widgets.get_notebook_tab_button()
         node.bind_property(
@@ -92,8 +92,24 @@ class SuperDesign(Gtk.Application):
         #     True
         # ))
 
+        c = Gtk.ShortcutController()
+        a = Gtk.CallbackAction.new(
+            lambda *_a: self.debug_action(),
+            None,
+            None,
+        )
+        t = Gtk.ShortcutTrigger.parse_string("<Control>d")
+        s = Gtk.Shortcut.new(t, a)
+
+        c.add_shortcut(s)
+        self.window.add_controller(c)
+
         self.window.set_application(app)
         self.window.present()
+
+    def debug_action(self):
+        for l in self.configuration.store_lang.children:
+            print(l.Synonym)
 
 
 app = SuperDesign()

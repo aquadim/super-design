@@ -2,6 +2,7 @@
 from lxml import etree as ET
 import model
 import os
+import observable
 
 
 def get_dumped_objects(objects_xml, kind, ns):
@@ -107,11 +108,11 @@ def xml_to_model(p):
     # Загрузка языков
     languages_xml = get_dumped_objects(objects_xml, "Language", ns)
     languages = collect_objects(p, "Languages", "Language", languages_xml, parse_func_Language, ns)
-    configuration.store_lang.children = languages
+    configuration.store_lang.children = observable.ObservableList(languages)
 
     # Загрузка справочников
     catalogs_xml = get_dumped_objects(objects_xml, "Catalog", ns)
     catalogs = collect_objects(p, "Catalogs", "Catalog", catalogs_xml, parse_func_Catalog, ns)
-    configuration.store_catalog.children = catalogs
+    configuration.store_catalog.children = observable.ObservableList(catalogs)
 
     return configuration
