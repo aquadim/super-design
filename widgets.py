@@ -39,14 +39,14 @@ def get_notebook_tab_button():
 
     label = Gtk.Label()
 
-    close_btn = Gtk.Button.new_with_label("закрыть [x]")
+    close_btn = Gtk.Button.new_with_label("[x]")
     close_btn.add_css_class("flat")
     close_btn.add_css_class("destructive-action")
 
     tab_box.append(label)
     tab_box.append(close_btn)
 
-    return (tab_box, label)
+    return (tab_box, label, close_btn)
 
 
 def get_properties_page(props, root_node):
@@ -113,9 +113,18 @@ def get_configuration_tree(configmodel, id_to_binding, app):
     def create_gio_model(item, user_data):
         children = getattr(item, "children", []) or []
 
+        # В узлах хранилища дети хранятся в Gio.ListStore
+        # Благодаря этому, из приложения мы можем добавлять
+        # объекты конфигурации и они сразу отобразятся в интерфейсе
+        if item.node_type == model.NodeType.STORAGE:
+            return children
+
+        # Детей нет, возвращаем Null (None)
         if len(children) == 0:
             return None
 
+        # В обычных узлах дети не меняются
+        # Поэтому модель мы сделали раз и она осталась
         gio_model = Gio.ListStore.new(model.Node)
         for c in children:
             gio_model.append(c)

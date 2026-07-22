@@ -2,11 +2,10 @@
 from lxml import etree as ET
 import model
 import os
-import observable
 
 
-def get_dumped_objects(objects_xml, kind, ns):
-    return objects_xml.xpath(f"/d:ConfigDumpInfo/d:ConfigVersions/d:Metadata[starts-with(@name,'{kind}')]", namespaces=ns)
+def get_dumped_objects(root_children, kind, ns):
+    return root_children.findall(f"md:{kind}", ns)
 
 
 # Получает строку из свойств
@@ -45,7 +44,7 @@ def collect_objects(p, collection_name, mdo_name, items, parse_func, ns):
     obj_dir = os.path.join(p, collection_name)
     collection = []
     for item in items:
-        obj_path    = os.path.join(obj_dir, item.get('name').split('.')[1] + ".xml")
+        obj_path    = os.path.join(obj_dir, item.text + ".xml")
         mdo         = ET.parse(obj_path).getroot()
         obj         = mdo.find(f"md:{mdo_name}", ns)
         props       = obj.find("md:Properties", ns)
@@ -59,6 +58,17 @@ def parse_func_Language(props, ns):
         parse_localized_string(props, "Synonym", ns),
         parse_string(props, "Comment", ns),
         parse_string(props, "LanguageCode", ns),
+    )
+
+
+def parse_func_Subsystem(props, ns):
+    return model.SubsystemNode(
+        parse_string(props, "Name", ns),
+        parse_localized_string(props, "Synonym", ns),
+        parse_string(props, "Comment", ns),
+        parse_bool(props, "IncludeInCommandInterface", ns),
+        parse_bool(props, "UseOneCommand", ns),
+        parse_localized_string(props, "Explanation", ns),
     )
 
 
@@ -103,16 +113,24 @@ def xml_to_model(p):
         parse_bool(props, "UseOrdinaryFormInManagedApplication", ns),
     )
 
-    objects_xml = ET.parse(os.path.join(p, "ConfigDumpInfo.xml")).getroot()
+    root_children = conf.find("md:ChildObjects", ns)
 
     # Загрузка языков
-    languages_xml = get_dumped_objects(objects_xml, "Language", ns)
+    languages_xml = get_dumped_objects(root_children, "Language", ns)
     languages = collect_objects(p, "Languages", "Language", languages_xml, parse_func_Language, ns)
-    configuration.store_lang.children = observable.ObservableList(languages)
+    for obj in languages:
+        configuration.store_lang.children.append(obj)
+
+    # Загрузка подсистем
+    subsystems_xml = get_dumped_objects(root_children, "Subsystem", ns)
+    subsystems = collect_objects(p, "Subsystems", "Subsystem", subsystems_xml, parse_func_Subsystem, ns)
+    for obj in subsystems:
+        configuration.store_subsystem.children.append(obj)
 
     # Загрузка справочников
-    catalogs_xml = get_dumped_objects(objects_xml, "Catalog", ns)
+    catalogs_xml = get_dumped_objects(root_children, "Catalog", ns)
     catalogs = collect_objects(p, "Catalogs", "Catalog", catalogs_xml, parse_func_Catalog, ns)
-    configuration.store_catalog.children = observable.ObservableList(catalogs)
+    for obj in catalogs:
+        configuration.store_catalog.children.append(obj)
 
     return configuration

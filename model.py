@@ -1,7 +1,6 @@
 from enum import Enum
 import properties
-import observable
-from gi.repository import GObject
+from gi.repository import GObject, Gio
 
 
 def translate_enum(*args):
@@ -19,6 +18,7 @@ class NodeType(Enum):
     LANGUAGE = 2
     STORAGE = 3
     CATALOG = 4
+    SUBSYSTEM = 5
 
     def written(self):
         if self == NodeType.CONFIGURATION:
@@ -27,6 +27,8 @@ class NodeType(Enum):
             return "Язык"
         elif self == NodeType.CATALOG:
             return "Справочник"
+        elif self == NodeType.SUBSYSTEM:
+            return "Подсистема"
 
 
 class CategoryType(Enum):
@@ -138,7 +140,8 @@ class RootNode(Node):
         'HelpHTMLContent',
 
         'store_lang',
-        'store_catalog'
+        'store_catalog',
+        'store_subsystem',
     ]
     emoji = "🟡"
     can_display_properties_page = True
@@ -159,8 +162,9 @@ class RootNode(Node):
         UseOrdinaryFormInManagedApplication):
 
         # Хранилища объектов
-        self.store_lang = StoreNode("📁💬", "Языки")
-        self.store_catalog = StoreNode("📁 📦", "Справочники")
+        self.store_lang = StoreNode("⋮💬", "Языки")
+        self.store_catalog = StoreNode("⋮📦", "Справочники")
+        self.store_subsystem = StoreNode("⋮🗂️", "Подсистемы")
 
         super().__init__(
             "root",
@@ -169,8 +173,9 @@ class RootNode(Node):
             Comment,
             NodeType.CONFIGURATION,
             [
+                self.store_subsystem,
                 self.store_lang,
-                self.store_catalog
+                self.store_catalog,
             ]
         )
         self.IncludeHelpInContents = IncludeHelpInContents
@@ -185,9 +190,9 @@ class RootNode(Node):
 
     def get_properties(self):
         return super().get_properties() + [
-            properties.EnumProperty(CategoryType.GENERAL, self, 'default_run_mode', self.default_run_mode, "Основной режим запуска"),
-            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'vendor', self.vendor, "Поставщик"),
-            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'version', self.version, "Версия"),
+            properties.EnumProperty(CategoryType.GENERAL, self, 'DefaultRunMode', self.DefaultRunMode, "Основной режим запуска"),
+            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'Vendor', self.Vendor, "Поставщик"),
+            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'Version', self.Version, "Версия"),
             properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'UpdateCatalogAddress', self.UpdateCatalogAddress, "Адрес каталога обновлений"),
             properties.BoolProperty(CategoryType.GENERAL, self, 'UseManagedFormInOrdinaryApplication', self.UseManagedFormInOrdinaryApplication, "Использовать управляемые формы в обычном приложении"),
             properties.BoolProperty(CategoryType.GENERAL, self, 'UseOrdinaryFormInManagedApplication', self.UseOrdinaryFormInManagedApplication, "Использовать обычные формы в управляемом приложении"),
@@ -209,7 +214,7 @@ class StoreNode(Node):
             None,
             None,
             NodeType.STORAGE,
-            observable.ObservableList([])
+            Gio.ListStore.new(Node)
         )
         self.emoji = emoji
 
@@ -237,6 +242,36 @@ class LanguageNode(Node):
     def get_properties(self):
         return super().get_properties() + [
             properties.SimpleTextProperty(CategoryType.LANG, self, 'LanguageCode', self.LanguageCode, "Код языка")
+        ]
+
+# Подсистема
+class SubsystemNode(Node):
+    __slots__ = [
+        'IncludeInCommandInterface',
+        'UseOneCommand',
+        'Explanation'
+    ]
+    emoji = '🗂️'
+    can_display_properties_page = True
+
+    def __init__(self, name, Synonym, Comment, IncludeInCommandInterface, UseOneCommand, Explanation):
+        super().__init__(
+            f"subsystem:{name}",
+            name,
+            Synonym,
+            Comment,
+            NodeType.SUBSYSTEM,
+            []
+        )
+        self.IncludeInCommandInterface = IncludeInCommandInterface
+        self.UseOneCommand = UseOneCommand
+        self.Explanation = Explanation
+
+    def get_properties(self):
+        return super().get_properties() + [
+            properties.BoolProperty(CategoryType.GENERAL, self, 'IncludeInCommandInterface', self.IncludeInCommandInterface, "Включать в командный интерфейс"),
+            properties.BoolProperty(CategoryType.GENERAL, self, 'UseOneCommand', self.UseOneCommand, "Подсистема с одной командой"),
+            properties.LocalisedStringProperty(CategoryType.GENERAL, self, 'Explanation', self.Explanation, "Пояснение", True),
         ]
 
 
