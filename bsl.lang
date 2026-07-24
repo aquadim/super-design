@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<language id="bsl" name="Встроенный язык 1С:Предприятия" version="2.0" _section="Script">
+  <metadata>
+    <property name="mimetypes">text/plain;</property>
+    <property name="globs">*.bsl;</property>
+    <property name="line-comment-start">//</property>
+    <property name="suggested-suffix">.bsl</property>
+  </metadata>
+
+  <styles>
+    <style id="comment" name="Comment" map-to="def:comment"/>
+    <style id="string" name="String" map-to="def:string"/>
+    <style id="preprocessor" name="Preprocessor" map-to="def:preprocessor"/>
+    <style id="keyword" name="Keyword" map-to="def:keyword"/>
+    <style id="functions" name="Functions" map-to="def:function"/>
+    <style id="boolean" name="Boolean" map-to="def:boolean"/>
+      <style id="underlined" name="Underline" map-to="def:underlined"/>
+  </styles>
+
+  <default-regex-options case-sensitive="false" />
+
+  <definitions>
+    <context id="bsl">
+      <include>
+        <!--Комментарии-->
+        <context id="comment" style-ref="comment">
+          <start>\/\/</start>
+          <end>$</end>
+          <include>
+            <!--Док-комментарии-->
+            <context id="doc-comment-keyword" style-ref="underlined">
+              <match>(Возвращаемое значение|Описание|Параметры)\:</match>
+            </context>
+          </include>
+        </context>
+
+        <context id="string" end-at-line-end="true" style-ref="string">
+          <start>"</start>
+          <end>"</end>
+          <include>
+            <!--Параметр запроса-->
+            <context id="parameter" style-ref="underlined">
+              <match>&amp;\w*</match>
+            </context>
+          </include>
+        </context>
+
+        <context id="string-continued" end-at-line-end="true" style-ref="string">
+          <start>\|</start>
+          <end>"</end>
+          <include>
+            <context ref="parameter"/>
+          </include>
+        </context>
+
+
+        <context ref="def:decimal"/>
+        <context ref="def:float"/>
+
+        <context id="preprocessor" style-ref="preprocessor">
+          <start>^&amp;</start>
+          <end>$</end>
+        </context>
+
+        <context id="region-start" style-ref="preprocessor">
+          <start>#Область</start>
+          <end>$</end>
+        </context>
+
+        <context id="region-end" style-ref="preprocessor">
+          <start>#КонецОбласти</start>
+          <end>$</end>
+        </context>
+
+        <context id="keywords" style-ref="keyword">
+          <keyword>если</keyword>
+          <keyword>иначе</keyword>
+          <keyword>для</keyword>
+          <keyword>пока</keyword>
+          <keyword>возврат</keyword>
+          <keyword>прервать</keyword>
+          <keyword>цикл</keyword>
+          <keyword>продолжить</keyword>
+          <keyword>новый</keyword>
+          <keyword>попытка</keyword>
+          <keyword>исключение</keyword>
+          <keyword>конецпопытки</keyword>
+          <keyword>тогда</keyword>
+          <keyword>конецесли</keyword>
+          <keyword>функция</keyword>
+          <keyword>конецфункции</keyword>
+          <keyword>процедура</keyword>
+          <keyword>конецпроцедуры</keyword>
+          <keyword>конеццикла</keyword>
+          <keyword>неопределено</keyword>
+          <keyword>null</keyword>
+          <keyword>экспорт</keyword>
+<keyword>и</keyword>
+<keyword>или</keyword>
+<keyword>не</keyword>
+<keyword>ИначеЕсли</keyword>
+<keyword>асинх</keyword>
+        </context>
+
+        <context id="boolean" style-ref="boolean">
+          <keyword>истина</keyword>
+          <keyword>ложь</keyword>
+        </context>
+<!--
+        <context id="functions" style-ref="functions">
+
+        </context>
+-->
+      </include>
+    </context>
+  </definitions>
+</language>

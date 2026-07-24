@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+<menu id="menubar">
+    <submenu>
+        <attribute name="label" translatable="yes">_Файл</attribute>
+        <section>
+            <item>
+                <attribute name="action">app.quit</attribute>
+                <attribute name="label" translatable="yes">_Выход</attribute>
+            </item>
+        </section>
+    </submenu>
+</menu>
+</interface>
