@@ -42,16 +42,17 @@ class NodeType(Enum):
     STORAGE = 3
     CATALOG = 4
     SUBSYSTEM = 5
+    COMMONMODULE = 6
 
     def written(self):
-        if self == NodeType.CONFIGURATION:
-            return "Конфигурация"
-        elif self == NodeType.LANGUAGE:
-            return "Язык"
-        elif self == NodeType.CATALOG:
-            return "Справочник"
-        elif self == NodeType.SUBSYSTEM:
-            return "Подсистема"
+        return translate_enum(
+            self,
+            NodeType.CONFIGURATION, "Конфигурация",
+            NodeType.LANGUAGE, "Язык",
+            NodeType.CATALOG, "Справочник",
+            NodeType.SUBSYSTEM, "Подсистема",
+            NodeType.COMMONMODULE, "Общий модуль",
+        )
 
 
 class CategoryType(Enum):
@@ -93,12 +94,14 @@ class CategoryType(Enum):
 class SourceCodeType(Enum):
     OBJECT      = 1
     MANAGER     = 2
+    MODULE      = 3
 
     def written(self):
         return translate_enum(
             self,
             SourceCodeType.OBJECT, "Модуль объекта",
             SourceCodeType.MANAGER, "Модуль менеджера",
+            SourceCodeType.MODULE, "Модуль",
         )
 
 
@@ -204,6 +207,7 @@ class RootNode(Node):
         self.store_lang = StoreNode("⋮💬", "Языки")
         self.store_catalog = StoreNode("⋮📦", "Справочники")
         self.store_subsystem = StoreNode("⋮🗂️", "Подсистемы")
+        self.store_commonmodule = StoreNode("⋮📃", "Общие модули")
 
         super().__init__(
             "root",
@@ -213,6 +217,7 @@ class RootNode(Node):
             NodeType.CONFIGURATION,
             [
                 self.store_subsystem,
+                self.store_commonmodule,
                 self.store_lang,
                 self.store_catalog,
             ]
@@ -311,6 +316,67 @@ class SubsystemNode(Node):
             properties.BoolProperty(CategoryType.GENERAL, self, 'IncludeInCommandInterface', self.IncludeInCommandInterface, "Включать в командный интерфейс"),
             properties.BoolProperty(CategoryType.GENERAL, self, 'UseOneCommand', self.UseOneCommand, "Подсистема с одной командой"),
             properties.LocalisedStringProperty(CategoryType.GENERAL, self, 'Explanation', self.Explanation, "Пояснение", True),
+        ]
+
+
+# Общий модуль
+class CommonModuleNode(Node):
+    __slots__ = [
+        'Global',
+        'ClientManagedApplication',
+        'Server',
+        'ExternalConnection',
+        'ClientOrdinaryApplication',
+        'ServerCall',
+        'Privileged',
+        'ReturnValuesReuse',
+        'Module',
+    ]
+    emoji = '📃'
+    can_display_properties_page = True
+
+    def __init__(self, name, Synonym, Comment,
+        Global,
+        ClientManagedApplication,
+        Server,
+        ExternalConnection,
+        ClientOrdinaryApplication,
+        ServerCall,
+        Privileged,
+        ReturnValuesReuse,
+    ):
+        super().__init__(
+            f"commonmodule:{name}",
+            name,
+            Synonym,
+            Comment,
+            NodeType.COMMONMODULE,
+            Gio.ListStore.new(Node),
+        )
+        self.Global = Global
+        self.ClientManagedApplication = ClientManagedApplication
+        self.Server = Server
+        self.ExternalConnection = ExternalConnection
+        self.ClientOrdinaryApplication = ClientOrdinaryApplication
+        self.ServerCall = ServerCall
+        self.Privileged = Privileged
+        self.ReturnValuesReuse = ReturnValuesReuse
+
+    def get_properties(self):
+        return super().get_properties() + [
+            properties.BoolProperty(
+                CategoryType.GENERAL,
+                self,
+                'Global',
+                self.Global,
+                "Глобальный модуль"),
+            properties.SourceCodeProperty(
+                CategoryType.SOURCECODE,
+                self,
+                'Module',
+                self.Module,
+                "Модуль"
+            ),
         ]
 
 

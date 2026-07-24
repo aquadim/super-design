@@ -3,7 +3,6 @@ from lxml import etree as ET
 import model
 import os
 from pathlib import Path
-from gi.repository import Gio
 
 
 def get_dumped_objects(root_children, kind, ns):
@@ -24,6 +23,11 @@ def get_object_any_dir(obj_path, dir_name):
 # Вывод /Subsystems/УИ_УниверсальныеИнструменты/Ext/
 def get_object_ext_dir(obj_path):
     return get_object_any_dir(obj_path, "Ext")
+
+
+# Возвращает путь к модулю
+def get_module_path(obj_path):
+    return os.path.join(get_object_ext_dir(obj_path), "Module.bsl")
 
 
 # Возвращает путь к модулю объекта
@@ -135,6 +139,26 @@ def parse_func_Catalog(obj_path, obj, props, ns):
     return node
 
 
+def parse_func_CommonModule(obj_path, obj, props, ns):
+    node = model.CommonModuleNode(
+        parse_string(props, "Name", ns),
+        parse_localized_string(props, "Synonym", ns),
+        parse_string(props, "Comment", ns),
+        parse_bool(props, "Global", ns),
+        parse_bool(props, "ClientManagedApplication", ns),
+        parse_bool(props, "Server", ns),
+        parse_bool(props, "ExternalConnection", ns),
+        parse_bool(props, "ClientOrdinaryApplication", ns),
+        parse_bool(props, "ServerCall", ns),
+        parse_bool(props, "Privileged", ns),
+        None #TODO
+    )
+
+    node.Module = model.LazySourceCode(get_module_path(obj_path), node, model.SourceCodeType.MODULE)
+
+    return node
+
+
 def xml_to_model(p):
     ns = {
         "md": "http://v8.1c.ru/8.3/MDClasses",
@@ -182,5 +206,12 @@ def xml_to_model(p):
     catalogs = collect_objects(p, "Catalogs", "Catalog", catalogs_xml, parse_func_Catalog, ns)
     for obj in catalogs:
         configuration.store_catalog.children.append(obj)
+
+
+    # Загрузка общих модулей
+    common_modules_xml = get_dumped_objects(root_children, "CommonModule", ns)
+    common_modules = collect_objects(p, "CommonModules", "CommonModule", common_modules_xml, parse_func_CommonModule, ns)
+    for obj in common_modules:
+        configuration.store_commonmodule.children.append(obj)
 
     return configuration
