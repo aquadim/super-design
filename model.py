@@ -300,7 +300,7 @@ class SubsystemNode(Node):
             Synonym,
             Comment,
             NodeType.SUBSYSTEM,
-            []
+            Gio.ListStore.new(Node),
         )
         self.IncludeInCommandInterface = IncludeInCommandInterface
         self.UseOneCommand = UseOneCommand

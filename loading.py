@@ -3,16 +3,27 @@ from lxml import etree as ET
 import model
 import os
 from pathlib import Path
+from gi.repository import Gio
 
 
 def get_dumped_objects(root_children, kind, ns):
     return root_children.findall(f"md:{kind}", ns)
 
 
-def get_object_ext_dir(obj_path):
+# Возвращает папку объекта
+# Для /Subsystems/УИ_УниверсальныеИнструменты.xml и dir_name = Subsystems
+# Вывод /Subsystems/УИ_УниверсальныеИнструменты/Subsystems/
+def get_object_any_dir(obj_path, dir_name):
     obj_dir = os.path.dirname(obj_path)
     obj_name = obj_path.stem
-    return os.path.join(obj_dir, obj_name, "Ext")
+    return os.path.join(obj_dir, obj_name, dir_name)
+
+
+# Возвращает Ext папку объекта
+# Для /Subsystems/УИ_УниверсальныеИнструменты.xml
+# Вывод /Subsystems/УИ_УниверсальныеИнструменты/Ext/
+def get_object_ext_dir(obj_path):
+    return get_object_any_dir(obj_path, "Ext")
 
 
 # Возвращает путь к модулю объекта
@@ -65,11 +76,11 @@ def collect_objects(p, collection_name, mdo_name, items, parse_func, ns):
         mdo         = ET.parse(obj_path).getroot()
         obj         = mdo.find(f"md:{mdo_name}", ns)
         props       = obj.find("md:Properties", ns)
-        collection.append(parse_func(obj_path, props, ns))
+        collection.append(parse_func(obj_path, obj, props, ns))
     return collection
 
 
-def parse_func_Language(obj_path, props, ns):
+def parse_func_Language(obj_path, obj, props, ns):
     return model.LanguageNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -78,8 +89,8 @@ def parse_func_Language(obj_path, props, ns):
     )
 
 
-def parse_func_Subsystem(obj_path, props, ns):
-    return model.SubsystemNode(
+def parse_func_Subsystem(obj_path, obj, props, ns):
+    subsystem = model.SubsystemNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
         parse_string(props, "Comment", ns),
@@ -88,8 +99,25 @@ def parse_func_Subsystem(obj_path, props, ns):
         parse_localized_string(props, "Explanation", ns),
     )
 
+    # Поиск подчиненных подсистем
+    children_xml = obj.find("md:ChildObjects", ns)
+    if len(children_xml) > 0:
+        children = collect_objects(
+            os.path.dirname(get_object_ext_dir(obj_path)),
+            "Subsystems",
+            "Subsystem",
+            children_xml,
+            parse_func_Subsystem,
+            ns
+        )
+        for c in children:
+            subsystem.children.append(c)
 
-def parse_func_Catalog(obj_path, props, ns):
+
+    return subsystem
+
+
+def parse_func_Catalog(obj_path, obj, props, ns):
     node = model.CatalogNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
