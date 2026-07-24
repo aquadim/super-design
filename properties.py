@@ -12,7 +12,7 @@ class Property:
         self.prop_name = prop_name
         self.value = default_value
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         raise RuntimeError("Виджет не установлен для свойства")
 
 
@@ -21,7 +21,7 @@ class BindTextProperty(Property):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         # Подпись свойства
         lbl = Gtk.Label(label=self.label)
         lbl.set_halign(Gtk.Align.START)
@@ -52,7 +52,7 @@ class SimpleTextProperty(Property):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         # Подпись свойства
         lbl = Gtk.Label(label=self.label)
         lbl.set_halign(Gtk.Align.START)
@@ -80,7 +80,7 @@ class NumProperty(Property):
         self.maxv = maxv if maxv is not None else sys.maxsize
         self.step = step
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         box = Gtk.Box()
         box.set_orientation(Gtk.Orientation.VERTICAL)
 
@@ -101,9 +101,25 @@ class BoolProperty(Property):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         btn = Gtk.CheckButton.new_with_label(self.label)
         btn.set_active(self.value)
+        return btn
+
+
+class SourceCodeProperty(Property):
+    def __init__(self, category, obj, prop_name, default_value, label):
+        super().__init__(category, obj, prop_name, default_value)
+        self.label = label
+
+    def build_gtk_widget(self, root_node, app):
+        btn = Gtk.Button.new_with_label(self.label)
+        btn.set_halign(Gtk.Align.START)
+
+        def on_click(src, value):
+            app.open_code(self.value)
+
+        btn.connect("clicked", on_click, self.value)
         return btn
 
 
@@ -112,7 +128,7 @@ class EnumProperty(Property):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         enum_type = type(getattr(self.obj, self.prop_name))
         dropdown = widgets.get_dropdown_from_enum(enum_type, self.value)
 
@@ -132,7 +148,7 @@ class LocalisedStringProperty(Property):
         self.label = label
         self.big = big
 
-    def build_gtk_widget(self, root_node):
+    def build_gtk_widget(self, root_node, app):
         # Подпись свойства
         lbl = Gtk.Label(label = self.label)
         lbl.set_halign(Gtk.Align.START)

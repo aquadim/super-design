@@ -2,10 +2,27 @@
 from lxml import etree as ET
 import model
 import os
+from pathlib import Path
 
 
 def get_dumped_objects(root_children, kind, ns):
     return root_children.findall(f"md:{kind}", ns)
+
+
+def get_object_ext_dir(obj_path):
+    obj_dir = os.path.dirname(obj_path)
+    obj_name = obj_path.stem
+    return os.path.join(obj_dir, obj_name, "Ext")
+
+
+# Возвращает путь к модулю объекта
+def get_object_module_path(obj_path):
+    return os.path.join(get_object_ext_dir(obj_path), "ObjectModule.bsl")
+
+
+# Возвращает путь к модулю менеджера объекта
+def get_manager_module_path(obj_path):
+    return os.path.join(get_object_ext_dir(obj_path), "ManagerModule.bsl")
 
 
 # Получает строку из свойств
@@ -44,15 +61,15 @@ def collect_objects(p, collection_name, mdo_name, items, parse_func, ns):
     obj_dir = os.path.join(p, collection_name)
     collection = []
     for item in items:
-        obj_path    = os.path.join(obj_dir, item.text + ".xml")
+        obj_path    = Path(os.path.join(obj_dir, item.text + ".xml"))
         mdo         = ET.parse(obj_path).getroot()
         obj         = mdo.find(f"md:{mdo_name}", ns)
         props       = obj.find("md:Properties", ns)
-        collection.append(parse_func(props, ns))
+        collection.append(parse_func(obj_path, props, ns))
     return collection
 
 
-def parse_func_Language(props, ns):
+def parse_func_Language(obj_path, props, ns):
     return model.LanguageNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -61,7 +78,7 @@ def parse_func_Language(props, ns):
     )
 
 
-def parse_func_Subsystem(props, ns):
+def parse_func_Subsystem(obj_path, props, ns):
     return model.SubsystemNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -72,8 +89,8 @@ def parse_func_Subsystem(props, ns):
     )
 
 
-def parse_func_Catalog(props, ns):
-    return model.CatalogNode(
+def parse_func_Catalog(obj_path, props, ns):
+    node = model.CatalogNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
         parse_string(props, "Comment", ns),
@@ -83,6 +100,11 @@ def parse_func_Catalog(props, ns):
         parse_int(props, "LevelCount", ns),
         parse_bool(props, "FoldersOnTop", ns),
     )
+
+    node.ObjectModule = model.LazySourceCode(get_object_module_path(obj_path), node, model.SourceCodeType.OBJECT)
+    node.ManagerModule = model.LazySourceCode(get_manager_module_path(obj_path), node, model.SourceCodeType.MANAGER)
+
+    return node
 
 
 def xml_to_model(p):

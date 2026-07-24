@@ -3,7 +3,7 @@ import sys
 gi.require_version("Gtk", "4.0")
 gi.require_version('Gdk', '4.0')
 gi.require_version("GtkSource", "5")
-from gi.repository import Gtk, GObject, GtkSource, Gdk
+from gi.repository import Gtk, GObject, GtkSource, Gdk, Gio
 import model
 import loading
 import widgets
@@ -15,7 +15,7 @@ class SuperDesign(Gtk.Application):
         super().__init__(application_id="com.super.design")
 
         # Сборка модели
-        self.configuration = loading.xml_to_model(Path("./example"))
+        self.configuration = loading.xml_to_model(Path("/home/kor/code/super/example/"))
 
         self.builder = None
         self.window = None
@@ -26,9 +26,26 @@ class SuperDesign(Gtk.Application):
         # какому id соответствует привязка имени
         self.id_to_binding = {}
 
+    def action_quit(self, action, param):
+        self.quit()
+
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+
+        # ВЫХОД
+        action = Gio.SimpleAction.new("quit", None)
+        action.connect("activate", self.action_quit)
+        self.add_action(action)
+        self.set_accels_for_action("app.quit", ["<Control>q"])
+
+        # Построение менюбара
+        menubar_builder = Gtk.Builder()
+        menubar_builder.add_from_file("ui/menu.ui")
+        self.set_menubar(menubar_builder.get_object("menubar"))
+
     def build_right_editor(self, code):
         style_manager = GtkSource.StyleSchemeManager.get_default()
-        style = style_manager.get_scheme("solarized-dark")
+        style = style_manager.get_scheme("solarized-light")
 
         lm = GtkSource.LanguageManager()
         language = lm.get_language("bsl")
@@ -66,7 +83,7 @@ class SuperDesign(Gtk.Application):
             return
 
         props = node.get_properties()
-        page, refs = widgets.get_properties_page(props, self.configuration)
+        page, refs = widgets.get_properties_page(props, self.configuration, self)
 
         tab_box, tab_label, close_btn = widgets.get_notebook_tab_button()
         node.bind_property(
@@ -84,10 +101,28 @@ class SuperDesign(Gtk.Application):
         self.notebook.set_tab_reorderable(page, True)
         self.register_tab(node.id, page)
 
-    def open_code(self, code):
-        sw = self.build_right_editor(code)
-        page_num = self.notebook.append_page(sw, Gtk.Label(label="test editor"))
+    def open_code(self, sourcecode):
+        sw = self.build_right_editor(sourcecode.get_content())
+
+        tab_box, tab_label, close_btn = widgets.get_notebook_tab_button()
+
+        def get_tab_transform_func(sourcecode_):
+            def func(binding, value):
+                return f'{sourcecode_.node.emoji} {sourcecode_.code_type.written()} "{value}"'
+            return func
+
+        sourcecode.node.bind_property(
+            'name',
+            tab_label,
+            'label',
+            GObject.BindingFlags.SYNC_CREATE,
+            get_tab_transform_func(sourcecode)
+        )
+
+        page_num = self.notebook.append_page(sw, tab_box)
+        close_btn.connect("clicked", self.close_tab, sourcecode.tabid)
         self.notebook.set_current_page(page_num)
+        self.register_tab(sourcecode.tabid, sw)
 
     # Активация приложения
     def on_activate(self, app):
@@ -105,6 +140,7 @@ class SuperDesign(Gtk.Application):
             Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
+        # Построение интерфейса
         self.builder = Gtk.Builder()
         self.builder.add_from_file("ui/root4.ui")
 
@@ -139,7 +175,7 @@ class SuperDesign(Gtk.Application):
         c.add_shortcut(s)
         self.window.add_controller(c)
 
-        self.window.set_application(app)
+        self.window.set_application(self)
         self.window.present()
 
     def debug_action(self):

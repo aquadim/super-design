@@ -49,7 +49,7 @@ def get_notebook_tab_button():
     return (tab_box, label, close_btn)
 
 
-def get_properties_page(props, root_node):
+def get_properties_page(props, root_node, app):
     # Хранилище ссылок
     refs = {}
 
@@ -84,7 +84,7 @@ def get_properties_page(props, root_node):
 
             refs[f"container{p.category.written}"] = category_container
 
-        widget = p.build_gtk_widget(root_node)
+        widget = p.build_gtk_widget(root_node, app)
         refs[f"widget{p.prop_name}"] = widget
         category_container.append(widget)
 

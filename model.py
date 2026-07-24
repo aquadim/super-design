@@ -13,6 +13,29 @@ def translate_enum(*args):
     return translation[args[0]]
 
 
+# Класс для ленивой загрузки кода
+class LazySourceCode:
+    __slots__ = ("tabid", "code_type", "node", "file_path", "content", "loaded")
+
+    def __init__(self, file_path, node, code_type):
+        self.file_path = file_path
+        self.node = node
+        self.content = ""
+        self.loaded = False
+        self.tabid = f"sourcecode{code_type.written()}:"+node.id
+        self.code_type = code_type
+
+    def get_content(self):
+        if not self.loaded:
+            try:
+                with open(self.file_path, 'r', encoding='utf-8') as f:
+                    self.content = f.read()
+            except FileNotFoundError:
+                self.content = ""
+            self.loaded = True
+        return self.content
+
+
 class NodeType(Enum):
     CONFIGURATION = 1
     LANGUAGE = 2
@@ -37,6 +60,7 @@ class CategoryType(Enum):
     LANG        = 3
     HIERARCHY   = 4
     HELP        = 5
+    SOURCECODE  = 6
 
     def written(self):
         return translate_enum(
@@ -46,6 +70,7 @@ class CategoryType(Enum):
             CategoryType.LANG, "💬 Язык",
             CategoryType.HIERARCHY, "📶 Иерархия",
             CategoryType.HELP, "🛟 Справочная информация",
+            CategoryType.SOURCECODE, "</> Программный код"
         )
 
     # Возвращает вес категории. 0 - минимум, 10001 - максимум
@@ -60,7 +85,21 @@ class CategoryType(Enum):
             return 300
         elif self == CategoryType.HELP:
             return 10000
+        elif self == CategoryType.SOURCECODE:
+            return 400
         return 10001
+
+
+class SourceCodeType(Enum):
+    OBJECT      = 1
+    MANAGER     = 2
+
+    def written(self):
+        return translate_enum(
+            self,
+            SourceCodeType.OBJECT, "Модуль объекта",
+            SourceCodeType.MANAGER, "Модуль менеджера",
+        )
 
 
 class DefaultRunMode(Enum):
@@ -283,6 +322,8 @@ class CatalogNode(Node):
         'LimitLevelCount',
         'LevelCount',
         'FoldersOnTop',
+        'ManagerModule',
+        'ObjectModule',
     ]
     emoji = '📦'
     can_display_properties_page = True
@@ -319,10 +360,9 @@ class CatalogNode(Node):
             properties.BoolProperty(CategoryType.HIERARCHY, self, 'FoldersOnTop', self.FoldersOnTop, "Помещать группы сверху"),
             properties.BoolProperty(CategoryType.HIERARCHY, self, 'LimitLevelCount', self.LimitLevelCount, "Ограничить количество уровней иерархии"),
             properties.NumProperty(CategoryType.HIERARCHY, self, 'LevelCount', self.LevelCount, "Количество уровней иерархии",1,None,1),
+            properties.SourceCodeProperty(CategoryType.SOURCECODE, self, 'ManagerModule', self.ManagerModule, "Модуль менеджера"),
+            properties.SourceCodeProperty(CategoryType.SOURCECODE, self, 'ObjectModule', self.ObjectModule, "Модуль объекта"),
         ]
-
-    def modify_page(self, page):
-        print("Y")
 
 
 def get_transform_func(node):
