@@ -72,7 +72,7 @@ def parse_enum(props_obj, tag_name, ns, enum_class):
 
 
 # Загрузка языков
-def collect_objects(p, collection_name, mdo_name, items, parse_func, ns):
+def collect_objects(p, configuration, collection_name, mdo_name, items, parse_func, ns):
     obj_dir = os.path.join(p, collection_name)
     collection = []
     for item in items:
@@ -80,11 +80,11 @@ def collect_objects(p, collection_name, mdo_name, items, parse_func, ns):
         mdo         = ET.parse(obj_path).getroot()
         obj         = mdo.find(f"md:{mdo_name}", ns)
         props       = obj.find("md:Properties", ns)
-        collection.append(parse_func(obj_path, obj, props, ns))
+        collection.append(parse_func(configuration, obj_path, obj, props, ns))
     return collection
 
 
-def parse_func_Language(obj_path, obj, props, ns):
+def parse_func_Language(configuration, obj_path, obj, props, ns):
     return model.LanguageNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -93,7 +93,7 @@ def parse_func_Language(obj_path, obj, props, ns):
     )
 
 
-def parse_func_Subsystem(obj_path, obj, props, ns):
+def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
     subsystem = model.SubsystemNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -103,11 +103,30 @@ def parse_func_Subsystem(obj_path, obj, props, ns):
         parse_localized_string(props, "Explanation", ns),
     )
 
+    # Состав подсистемы
+    content_xml = props.find("md:Content", ns)
+    items = content_xml.findall("xr:Item", ns)
+    for item in items:
+        item_id = item.text
+        id_parts = item_id.split(".")
+
+        store_node = None
+        if id_parts[0] == "Catalog":
+            store_node = configuration.store_catalog
+        elif id_parts[0] == "CommonModule":
+            store_node = configuration.store_commonmodule
+        else:
+            print(f"Неизвестный вид объекта {id_parts[0]}")
+            continue
+        node = store_node.id_to_node[item_id]
+        subsystem.Content.append(node)
+
     # Поиск подчиненных подсистем
     children_xml = obj.find("md:ChildObjects", ns)
     if len(children_xml) > 0:
         children = collect_objects(
             os.path.dirname(get_object_ext_dir(obj_path)),
+            configuration,
             "Subsystems",
             "Subsystem",
             children_xml,
@@ -121,7 +140,7 @@ def parse_func_Subsystem(obj_path, obj, props, ns):
     return subsystem
 
 
-def parse_func_Catalog(obj_path, obj, props, ns):
+def parse_func_Catalog(configuration, obj_path, obj, props, ns):
     node = model.CatalogNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -139,7 +158,7 @@ def parse_func_Catalog(obj_path, obj, props, ns):
     return node
 
 
-def parse_func_CommonModule(obj_path, obj, props, ns):
+def parse_func_CommonModule(configuration, obj_path, obj, props, ns):
     node = model.CommonModuleNode(
         parse_string(props, "Name", ns),
         parse_localized_string(props, "Synonym", ns),
@@ -151,7 +170,7 @@ def parse_func_CommonModule(obj_path, obj, props, ns):
         parse_bool(props, "ClientOrdinaryApplication", ns),
         parse_bool(props, "ServerCall", ns),
         parse_bool(props, "Privileged", ns),
-        None #TODO
+        None
     )
 
     node.Module = model.LazySourceCode(get_module_path(obj_path), node, model.SourceCodeType.MODULE)
@@ -164,6 +183,7 @@ def xml_to_model(p):
         "md": "http://v8.1c.ru/8.3/MDClasses",
         "v8": "http://v8.1c.ru/8.1/data/core",
         "d": "http://v8.1c.ru/8.3/xcf/dumpinfo",
+        "xr": "http://v8.1c.ru/8.3/xcf/readable",
     }
 
     # Загрузка узла конфигурации
@@ -191,27 +211,26 @@ def xml_to_model(p):
 
     # Загрузка языков
     languages_xml = get_dumped_objects(root_children, "Language", ns)
-    languages = collect_objects(p, "Languages", "Language", languages_xml, parse_func_Language, ns)
+    languages = collect_objects(p, configuration, "Languages", "Language", languages_xml, parse_func_Language, ns)
     for obj in languages:
-        configuration.store_lang.children.append(obj)
-
-    # Загрузка подсистем
-    subsystems_xml = get_dumped_objects(root_children, "Subsystem", ns)
-    subsystems = collect_objects(p, "Subsystems", "Subsystem", subsystems_xml, parse_func_Subsystem, ns)
-    for obj in subsystems:
-        configuration.store_subsystem.children.append(obj)
+        configuration.store_lang.append(obj)
 
     # Загрузка справочников
     catalogs_xml = get_dumped_objects(root_children, "Catalog", ns)
-    catalogs = collect_objects(p, "Catalogs", "Catalog", catalogs_xml, parse_func_Catalog, ns)
+    catalogs = collect_objects(p, configuration, "Catalogs", "Catalog", catalogs_xml, parse_func_Catalog, ns)
     for obj in catalogs:
-        configuration.store_catalog.children.append(obj)
-
+        configuration.store_catalog.append(obj)
 
     # Загрузка общих модулей
     common_modules_xml = get_dumped_objects(root_children, "CommonModule", ns)
-    common_modules = collect_objects(p, "CommonModules", "CommonModule", common_modules_xml, parse_func_CommonModule, ns)
+    common_modules = collect_objects(p, configuration, "CommonModules", "CommonModule", common_modules_xml, parse_func_CommonModule, ns)
     for obj in common_modules:
-        configuration.store_commonmodule.children.append(obj)
+        configuration.store_commonmodule.append(obj)
+
+    # Загрузка подсистем
+    subsystems_xml = get_dumped_objects(root_children, "Subsystem", ns)
+    subsystems = collect_objects(p, configuration, "Subsystems", "Subsystem", subsystems_xml, parse_func_Subsystem, ns)
+    for obj in subsystems:
+        configuration.store_subsystem.children.append(obj)
 
     return configuration

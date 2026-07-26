@@ -142,6 +142,20 @@ class EnumProperty(Property):
         return box
 
 
+# Свойство состава подсистемы
+class SubsystemContentProperty(Property):
+    def __init__(self, category, obj, prop_name, default_value):
+        super().__init__(category, obj, prop_name, default_value)
+
+    def build_gtk_widget(self, root_node, app):
+        sw = widgets.get_subsystem_content_tree(
+            root_node,
+            self.obj,
+            self.value,
+            app.id_to_binding)
+        return sw
+
+
 class LocalisedStringProperty(Property):
     def __init__(self, category, obj, prop_name, default_value, label, big=False):
         super().__init__(category, obj, prop_name, default_value)

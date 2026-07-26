@@ -54,12 +54,18 @@ class SuperDesign(Gtk.Application):
         buffer_.set_text(code)
         buffer_.set_style_scheme(style)
 
+        # тэг буфера для свернутых участков кода
+        buffer_.create_tag("invisible", invisible=True)
+
+        # TODO: лексер bsl кода
+
+        # Создание виджета редактора кода
         view = GtkSource.View.new_with_buffer(buffer_)
         view.add_css_class("bsl-editor")
         view.set_monospace(True)
-        view.set_show_line_numbers(True)
-        view.set_show_line_marks(True)
-        view.set_tab_width(4)
+        view.set_show_line_numbers(True) # показывать номера строк
+        view.set_show_line_marks(True) # показывать отступы (gutters)
+        view.set_tab_width(4) # ширина отступов
 
         sw = Gtk.ScrolledWindow()
         sw.set_child(view)
@@ -79,7 +85,8 @@ class SuperDesign(Gtk.Application):
     # Открывает вкладку со свойствами узла конфигурации
     def open_properties(self, node):
         if node.id in self.tabs:
-            self.notebook.set_current_page(self.tabs[node.id])
+            page_num = self.notebook.page_num(self.tabs[node.id])
+            self.notebook.set_current_page(page_num)
             return
 
         props = node.get_properties()
@@ -131,6 +138,11 @@ class SuperDesign(Gtk.Application):
         css_provider.load_from_string("""
             frame{background-color: @theme_bg_color;}
             .bsl-editor{font: 20px Cascadia Code;}
+            .conf-tree * {
+                font-size: 18px;
+                padding: 0;
+                margin: 1px;
+            }
         """)
 
         # Добавляем поставщика стилей к экрану
@@ -180,6 +192,22 @@ class SuperDesign(Gtk.Application):
 
     def debug_action(self):
         print("doing debug action")
+        self.configuration.store_commonmodule.append(model.CommonModuleNode(
+            "Added just now",
+            {},
+            "",
+            True,
+            True,
+            True,
+            True,
+            True,
+            True,
+            True,
+            None,
+        ))
+        list_store = self.configuration.store_subsystem.children[0].Content
+        for item in list_store:
+            print(item)
         #self.configuration.store_lang.children.append(model.LanguageNode("добавленный язык","синоним","коммент","added"))
 
 

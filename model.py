@@ -56,12 +56,13 @@ class NodeType(Enum):
 
 
 class CategoryType(Enum):
-    GENERAL     = 1
-    DEVELOPMENT = 2
-    LANG        = 3
-    HIERARCHY   = 4
-    HELP        = 5
-    SOURCECODE  = 6
+    GENERAL             = 1
+    DEVELOPMENT         = 2
+    LANG                = 3
+    HIERARCHY           = 4
+    HELP                = 5
+    SOURCECODE          = 6
+    SUBSYSTEMCONTENT    = 7
 
     def written(self):
         return translate_enum(
@@ -71,7 +72,8 @@ class CategoryType(Enum):
             CategoryType.LANG, "💬 Язык",
             CategoryType.HIERARCHY, "📶 Иерархия",
             CategoryType.HELP, "🛟 Справочная информация",
-            CategoryType.SOURCECODE, "</> Программный код"
+            CategoryType.SOURCECODE, "</> Программный код",
+            CategoryType.SUBSYSTEMCONTENT, "✅ Состав подсистемы",
         )
 
     # Возвращает вес категории. 0 - минимум, 10001 - максимум
@@ -88,6 +90,8 @@ class CategoryType(Enum):
             return 10000
         elif self == CategoryType.SOURCECODE:
             return 400
+        elif self == CategoryType.SUBSYSTEMCONTENT:
+            return 100
         return 10001
 
 
@@ -163,9 +167,6 @@ class Node(GObject.Object):
             properties.LocalisedStringProperty(CategoryType.GENERAL, self, 'Synonym', self.Synonym, "Синоним"),
             properties.SimpleTextProperty(CategoryType.GENERAL, self, 'Comment', self.Comment, "Комментарий"),
         ]
-
-    def modify_page(self, page):
-        pass
 
 
 # Корневой узел
@@ -247,13 +248,13 @@ class RootNode(Node):
 
 # Узел для хранения чего-либо
 class StoreNode(Node):
-    __slots__ = []
+    __slots__ = ['id_to_node']
     emoji = "📁"
     can_display_properties_page = False
 
     def __init__(self, emoji, name):
         super().__init__(
-            "store"+name,
+            "~!store"+name,
             name,
             None,
             None,
@@ -261,6 +262,11 @@ class StoreNode(Node):
             Gio.ListStore.new(Node)
         )
         self.emoji = emoji
+        self.id_to_node = {}
+
+    def append(self, node):
+        self.children.append(node)
+        self.id_to_node[node.id] = node
 
     def get_properties(self):
         return []
@@ -274,7 +280,7 @@ class LanguageNode(Node):
 
     def __init__(self, name, Synonym, Comment, LanguageCode):
         super().__init__(
-            f"lang:{LanguageCode}",
+            f"Language.{LanguageCode}",
             name,
             Synonym,
             Comment,
@@ -285,7 +291,12 @@ class LanguageNode(Node):
 
     def get_properties(self):
         return super().get_properties() + [
-            properties.SimpleTextProperty(CategoryType.LANG, self, 'LanguageCode', self.LanguageCode, "Код языка")
+            properties.SimpleTextProperty(
+                CategoryType.LANG,
+                self,
+                'LanguageCode',
+                self.LanguageCode,
+                "Код языка"),
         ]
 
 # Подсистема
@@ -293,12 +304,20 @@ class SubsystemNode(Node):
     __slots__ = [
         'IncludeInCommandInterface',
         'UseOneCommand',
-        'Explanation'
+        'Explanation',
+        'Content',
     ]
     emoji = '🗂️'
     can_display_properties_page = True
 
-    def __init__(self, name, Synonym, Comment, IncludeInCommandInterface, UseOneCommand, Explanation):
+    def __init__(self,
+                 name,
+                 Synonym,
+                 Comment,
+                 IncludeInCommandInterface,
+                 UseOneCommand,
+                 Explanation,
+    ):
         super().__init__(
             f"subsystem:{name}",
             name,
@@ -310,12 +329,34 @@ class SubsystemNode(Node):
         self.IncludeInCommandInterface = IncludeInCommandInterface
         self.UseOneCommand = UseOneCommand
         self.Explanation = Explanation
+        self.Content = Gio.ListStore.new(Node)
 
     def get_properties(self):
         return super().get_properties() + [
-            properties.BoolProperty(CategoryType.GENERAL, self, 'IncludeInCommandInterface', self.IncludeInCommandInterface, "Включать в командный интерфейс"),
-            properties.BoolProperty(CategoryType.GENERAL, self, 'UseOneCommand', self.UseOneCommand, "Подсистема с одной командой"),
-            properties.LocalisedStringProperty(CategoryType.GENERAL, self, 'Explanation', self.Explanation, "Пояснение", True),
+            properties.BoolProperty(
+                CategoryType.GENERAL,
+                self,
+                'IncludeInCommandInterface',
+                self.IncludeInCommandInterface,
+                "Включать в командный интерфейс"),
+            properties.BoolProperty(
+                CategoryType.GENERAL,
+                self,
+                'UseOneCommand',
+                self.UseOneCommand,
+                "Подсистема с одной командой"),
+            properties.LocalisedStringProperty(
+                CategoryType.GENERAL,
+                self,
+                'Explanation',
+                self.Explanation,
+                "Пояснение",
+                True),
+            properties.SubsystemContentProperty(
+                CategoryType.SUBSYSTEMCONTENT,
+                self,
+                'Content',
+                self.Content),
         ]
 
 
@@ -346,7 +387,7 @@ class CommonModuleNode(Node):
         ReturnValuesReuse,
     ):
         super().__init__(
-            f"commonmodule:{name}",
+            f"CommonModule.{name}",
             name,
             Synonym,
             Comment,
@@ -406,7 +447,7 @@ class CatalogNode(Node):
         FoldersOnTop,
     ):
         super().__init__(
-            f"catalog:{name}",
+            f"Catalog.{name}",
             name,
             Synonym,
             Comment,
