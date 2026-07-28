@@ -197,9 +197,16 @@ def get_configuration_tree(configmodel, id_to_binding, app):
         node = tree_row.get_item()
         if node == None:
             return
-        if not node.can_display_properties_page:
+
+        # При клике в дереве по общему модулю открывать его
+        # исходный код, а не окно свойств.
+        if node.node_type == model.NodeType.COMMONMODULE:
+            app.open_code(node.Module)
             return
-        app.open_properties(node)
+
+        if node.can_display_properties_page:
+            app.open_properties(node)
+
 
     column_view = Gtk.ColumnView()
     column_view.set_model(selection)
