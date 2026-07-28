@@ -71,6 +71,25 @@ def parse_enum(props_obj, tag_name, ns, enum_class):
     return enum_class.__members__[value]
 
 
+# Парсит реквизиты из объекта
+def parse_attributes(obj, parent_node, ns):
+    child_objects = obj.find("md:ChildObjects", ns)
+    attributes = child_objects.findall("md:Attribute", ns)
+    output = []
+    for a in attributes:
+        props = a.find("md:Properties", ns)
+
+        attribute = model.AttributeNode(
+            parse_string(props, "Name", ns),
+            parse_localized_string(props, "Synonym", ns),
+            parse_string(props, "Comment", ns),
+            parent_node,
+            None,
+        )
+        output.append(attribute)
+    return output
+
+
 # Загрузка языков
 def collect_objects(p, configuration, collection_name, mdo_name, items, parse_func, ns):
     obj_dir = os.path.join(p, collection_name)
@@ -116,7 +135,8 @@ def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
         elif id_parts[0] == "CommonModule":
             store_node = configuration.store_commonmodule
         else:
-            print(f"Неизвестный вид объекта {id_parts[0]}")
+            # Неизвестный вид объекта
+            # TODO log
             continue
         node = store_node.id_to_node[item_id]
         subsystem.Content.append(node)
@@ -149,8 +169,11 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
         parse_enum(props, "HierarchyType", ns, model.HierarchyType),
         parse_bool(props, "LimitLevelCount", ns),
         parse_int(props, "LevelCount", ns),
-        parse_bool(props, "FoldersOnTop", ns),
+        parse_bool(props, "FoldersOnTop", ns)
     )
+    attributes = parse_attributes(obj, node, ns)
+    if len(attributes) != 0:
+        node.store_attribute.add_bulk(attributes)
 
     node.ObjectModule = model.LazySourceCode(get_object_module_path(obj_path), node, model.SourceCodeType.OBJECT)
     node.ManagerModule = model.LazySourceCode(get_manager_module_path(obj_path), node, model.SourceCodeType.MANAGER)

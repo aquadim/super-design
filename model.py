@@ -43,6 +43,7 @@ class NodeType(Enum):
     CATALOG = 4
     SUBSYSTEM = 5
     COMMONMODULE = 6
+    ATTRIBUTE = 7
 
     def written(self):
         return translate_enum(
@@ -52,6 +53,7 @@ class NodeType(Enum):
             NodeType.CATALOG, "Справочник",
             NodeType.SUBSYSTEM, "Подсистема",
             NodeType.COMMONMODULE, "Общий модуль",
+            NodeType.ATTRIBUTE, "Реквизит",
         )
 
 
@@ -204,14 +206,16 @@ class RootNode(Node):
         UseManagedFormInOrdinaryApplication,
         UseOrdinaryFormInManagedApplication):
 
+        ID = "root"
+
         # Хранилища объектов
-        self.store_lang = StoreNode("⋮💬", "Языки")
-        self.store_catalog = StoreNode("⋮📦", "Справочники")
-        self.store_subsystem = StoreNode("⋮🗂️", "Подсистемы")
-        self.store_commonmodule = StoreNode("⋮📃", "Общие модули")
+        self.store_lang = StoreNode("⋮💬", "Языки", ID)
+        self.store_catalog = StoreNode("⋮📦", "Справочники", ID)
+        self.store_subsystem = StoreNode("⋮🗂️", "Подсистемы", ID)
+        self.store_commonmodule = StoreNode("⋮📃", "Общие модули", ID)
 
         super().__init__(
-            "root",
+            ID,
             Name,
             Synonym,
             Comment,
@@ -252,9 +256,9 @@ class StoreNode(Node):
     emoji = "📁"
     can_display_properties_page = False
 
-    def __init__(self, emoji, name):
+    def __init__(self, emoji, name, owner_node_id):
         super().__init__(
-            "~!store"+name,
+            owner_node_id+".Storage."+name,
             name,
             None,
             None,
@@ -267,6 +271,11 @@ class StoreNode(Node):
     def append(self, node):
         self.children.append(node)
         self.id_to_node[node.id] = node
+
+    def add_bulk(self, lst):
+        for item in lst:
+            self.id_to_node[item.id] = item
+        self.children.splice(0, 0, lst)
 
     def get_properties(self):
         return []
@@ -424,6 +433,7 @@ class CommonModuleNode(Node):
 # Справочник
 class CatalogNode(Node):
     __slots__ = [
+        'store_attribute',
         'Hierarchical',
         'HierarchyType',
         'LimitLevelCount',
@@ -446,14 +456,21 @@ class CatalogNode(Node):
         LevelCount,
         FoldersOnTop,
     ):
+        ID = f"Catalog.{name}"
+
+        self.store_attribute = StoreNode("➖", "Реквизиты", ID)
+
         super().__init__(
-            f"Catalog.{name}",
+            ID,
             name,
             Synonym,
             Comment,
             NodeType.CATALOG,
-            []
+            [
+                self.store_attribute,
+            ]
         )
+
         self.Hierarchical = Hierarchical
         self.HierarchyType = HierarchyType
         self.LimitLevelCount = LimitLevelCount
@@ -472,7 +489,34 @@ class CatalogNode(Node):
         ]
 
 
-def get_transform_func(node):
-    def func(binding, value):
-        return f'{node.emoji} {node.node_type.written()} "{value}"'
-    return func
+# Реквизит
+class AttributeNode(Node):
+    __slots__ = [
+        'ParentNode',
+        'Type',
+    ]
+    emoji = '➖'
+    can_display_properties_page = False
+
+    def __init__(
+        self,
+        name,
+        Synonym,
+        Comment,
+        ParentNode,
+        Type,
+    ):
+        super().__init__(
+            f"{ParentNode.id}.Attribute.{name}",
+            name,
+            Synonym,
+            Comment,
+            NodeType.ATTRIBUTE,
+            []
+        )
+        self.ParentNode = ParentNode
+        self.Type = Type
+
+    def get_properties(self):
+        return super().get_properties() + [
+        ]

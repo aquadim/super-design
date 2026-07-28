@@ -105,13 +105,16 @@ def get_properties_page(props, root_node, app):
     return page_scroll, refs
 
 
+def when_storage_node_changes(src, pos, rem, add, expander):
+    expander.set_hide_expander(len(src) == 0)
+
 def get_configuration_tree(configmodel, id_to_binding, app):
     root_model = Gio.ListStore.new(model.Node)
     root_model.append(configmodel)
 
     # Функция построения Gio модели
     def create_gio_model(item, user_data):
-        children = getattr(item, "children", []) or []
+        children = getattr(item, "children")
 
         # В узлах хранилища дети хранятся в Gio.ListStore
         # Благодаря этому, из приложения мы можем добавлять
@@ -133,7 +136,7 @@ def get_configuration_tree(configmodel, id_to_binding, app):
     tree_model = Gtk.TreeListModel.new(
         root = root_model,
         passthrough = False,
-        autoexpand = True,
+        autoexpand = False,
         create_func = create_gio_model,
         user_data = None
     )
@@ -150,6 +153,10 @@ def get_configuration_tree(configmodel, id_to_binding, app):
 
         tree_row = list_item.get_item()
         node = tree_row.get_item()
+
+        if node.node_type == model.NodeType.STORAGE:
+            node.children.connect("items-changed", when_storage_node_changes, expander)
+        expander.set_hide_expander(len(node.children) == 0)
 
         # Добавление привязки имени объекта к подписи в дереве
         # transform_func - замыкание, для добавления эмодзи узла

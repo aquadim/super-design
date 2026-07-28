@@ -98,7 +98,7 @@ class SuperDesign(Gtk.Application):
             tab_label,
             'label',
             GObject.BindingFlags.SYNC_CREATE,
-            model.get_transform_func(node)
+            lambda _binding,value: f'{node.emoji} {node.node_type.written()} "{value}"'
         )
         widgets.modify_page(node, page, refs)
 
@@ -165,16 +165,6 @@ class SuperDesign(Gtk.Application):
         # Заполнение дерева конфигурации
         paned.set_start_child(widgets.get_configuration_tree(self.configuration, self.id_to_binding, self))
 
-        # with open("./example/HTTPServices/СервисОбмена/Ext/Module.bsl", 'r', encoding='utf-8') as f:
-        #     self.open_code(f.read())
-        # self.open_properties(self.configuration)
-        # self.open_properties(model.CatalogNode(
-        #     "Номенклатура",
-        #     model.LocalisedString({model.DEFAULT_LANG: "Номенклатура"}),
-        #     "Наименования",
-        #     True
-        # ))
-
         c = Gtk.ShortcutController()
         a = Gtk.CallbackAction.new(
             lambda *_a: self.debug_action(),
@@ -192,22 +182,7 @@ class SuperDesign(Gtk.Application):
 
     def debug_action(self):
         print("doing debug action")
-        self.configuration.store_commonmodule.append(model.CommonModuleNode(
-            "Added just now",
-            {},
-            "",
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            True,
-            None,
-        ))
-        list_store = self.configuration.store_subsystem.children[0].Content
-        for item in list_store:
-            print(item)
+        self.configuration.store_catalog.children[0].store_attribute.children.append(model.AttributeNode("added",None,None,self.configuration,None))
         #self.configuration.store_lang.children.append(model.LanguageNode("добавленный язык","синоним","коммент","added"))
 
 
