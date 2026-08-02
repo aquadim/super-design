@@ -17,7 +17,9 @@ class SuperDesign(Gtk.Application):
         # Сборка модели
         self.configuration = loading.xml_to_model(Path("/home/kor/code/super/example/"))
 
+        # Сборщики GTK виджетов
         self.builder = None
+
         self.window = None
         self.notebook = None
         self.connect("activate", self.on_activate)
@@ -143,6 +145,8 @@ class SuperDesign(Gtk.Application):
                 padding: 0;
                 margin: 1px;
             }
+            .big{font-size: 24pt;}
+            .p-3{margin:8px;}
         """)
 
         # Добавляем поставщика стилей к экрану
@@ -152,7 +156,8 @@ class SuperDesign(Gtk.Application):
             Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
-        # Построение интерфейса
+        # --- Построение интерфейса --- #
+        # Главное окно
         self.builder = Gtk.Builder()
         self.builder.add_from_file("ui/root4.ui")
 

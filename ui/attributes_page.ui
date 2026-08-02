@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkBox" id="box">
+    <style>
+      <class name="p-3"/>
+    </style>
+    <property name="orientation">vertical</property>
+    <property name="visible">false</property>
+
+    <!--Подпись-->
+    <child>
+      <object class="GtkLabel" id="title">
+        <style>
+          <class name="big"/>
+        </style>
+        <property name="halign">start</property>
+        <property name="wrap">true</property>
+        <property name="width-chars">32</property>
+      </object>
+    </child>
+
+    <!--Имя-->
+    <child>
+      <object class="GtkBox" id="container-name">
+        <style>
+          <class name="p-3"/>
+        </style>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="label-name">
+            <property name="label">Имя реквизита</property>
+            <property name="halign">start</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry" id="entry-name"></object>
+        </child>
+      </object>
+    </child>
+
+    <!--Синоним-->
+    <child>
+      <object class="GtkBox" id="container-synonym">
+        <style>
+          <class name="p-3"/>
+        </style>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="label-synonym">
+            <property name="label">Синоним реквизита</property>
+            <property name="halign">start</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">horizontal</property>
+            <child>
+              <object class="GtkEntry" id="entry-synonym"></object>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn-synonym">
+                <property name="label">...</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+
+  </object>
+</interface>

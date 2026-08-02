@@ -65,6 +65,7 @@ class CategoryType(Enum):
     HELP                = 5
     SOURCECODE          = 6
     SUBSYSTEMCONTENT    = 7
+    ATTRIBUTES          = 8
 
     def written(self):
         return translate_enum(
@@ -76,6 +77,7 @@ class CategoryType(Enum):
             CategoryType.HELP, "🛟 Справочная информация",
             CategoryType.SOURCECODE, "</> Программный код",
             CategoryType.SUBSYSTEMCONTENT, "✅ Состав подсистемы",
+            CategoryType.ATTRIBUTES, "➖ Реквизиты",
         )
 
     # Возвращает вес категории. 0 - минимум, 10001 - максимум
@@ -94,6 +96,8 @@ class CategoryType(Enum):
             return 400
         elif self == CategoryType.SUBSYSTEMCONTENT:
             return 100
+        elif self == CategoryType.ATTRIBUTES:
+            return 350
         return 10001
 
 
@@ -147,21 +151,26 @@ class HierarchyType(Enum):
 
 # Узел конфигурации
 class Node(GObject.Object):
-    __slots__ = ['id', 'Synonym', 'Comment', 'node_type', 'children']
     __gtype_name__ = 'DataObject'
     emoji = "👽"
     can_display_properties_page = False
 
-    name = GObject.Property(type=str, default=None)
-
     def __init__(self, id, Name, Synonym, Comment, node_type, children=[]):
         super().__init__()
         self.id = id
-        self.name = Name
+        self._Name = Name
         self.Synonym = Synonym
         self.Comment = Comment
         self.node_type = node_type
         self.children = children
+
+    @GObject.Property(type=str, default=None)
+    def name(self):
+        return self._Name
+
+    @name.setter
+    def name(self, value):
+        self._Name = value
 
     def get_properties(self):
         return [
@@ -173,21 +182,6 @@ class Node(GObject.Object):
 
 # Корневой узел
 class RootNode(Node):
-    __slots__ = [
-        'ConfigurationExtensionCompatibilityMode',
-        'default_run_mode',
-        'Vendor',
-        'Version',
-        'UseManagedFormInOrdinaryApplication',
-        'UseOrdinaryFormInManagedApplication',
-        'UpdateCatalogAddress',
-        'IncludeHelpInContents',
-        'HelpHTMLContent',
-
-        'store_lang',
-        'store_catalog',
-        'store_subsystem',
-    ]
     emoji = "🟡"
     can_display_properties_page = True
 
@@ -252,7 +246,6 @@ class RootNode(Node):
 
 # Узел для хранения чего-либо
 class StoreNode(Node):
-    __slots__ = ['id_to_node']
     emoji = "📁"
     can_display_properties_page = False
 
@@ -283,7 +276,6 @@ class StoreNode(Node):
 
 # Язык
 class LanguageNode(Node):
-    __slots__ = ['LanguageCode',]
     emoji = '💬'
     can_display_properties_page = True
 
@@ -310,12 +302,6 @@ class LanguageNode(Node):
 
 # Подсистема
 class SubsystemNode(Node):
-    __slots__ = [
-        'IncludeInCommandInterface',
-        'UseOneCommand',
-        'Explanation',
-        'Content',
-    ]
     emoji = '🗂️'
     can_display_properties_page = True
 
@@ -371,17 +357,6 @@ class SubsystemNode(Node):
 
 # Общий модуль
 class CommonModuleNode(Node):
-    __slots__ = [
-        'Global',
-        'ClientManagedApplication',
-        'Server',
-        'ExternalConnection',
-        'ClientOrdinaryApplication',
-        'ServerCall',
-        'Privileged',
-        'ReturnValuesReuse',
-        'Module',
-    ]
     emoji = '📃'
     can_display_properties_page = True
 
@@ -432,16 +407,6 @@ class CommonModuleNode(Node):
 
 # Справочник
 class CatalogNode(Node):
-    __slots__ = [
-        'store_attribute',
-        'Hierarchical',
-        'HierarchyType',
-        'LimitLevelCount',
-        'LevelCount',
-        'FoldersOnTop',
-        'ManagerModule',
-        'ObjectModule',
-    ]
     emoji = '📦'
     can_display_properties_page = True
 
@@ -486,15 +451,12 @@ class CatalogNode(Node):
             properties.NumProperty(CategoryType.HIERARCHY, self, 'LevelCount', self.LevelCount, "Количество уровней иерархии",1,None,1),
             properties.SourceCodeProperty(CategoryType.SOURCECODE, self, 'ManagerModule', self.ManagerModule, "Модуль менеджера"),
             properties.SourceCodeProperty(CategoryType.SOURCECODE, self, 'ObjectModule', self.ObjectModule, "Модуль объекта"),
+            properties.AttributesProperty(CategoryType.ATTRIBUTES, self, 'store_attribute', self.store_attribute)
         ]
 
 
 # Реквизит
 class AttributeNode(Node):
-    __slots__ = [
-        'ParentNode',
-        'Type',
-    ]
     emoji = '➖'
     can_display_properties_page = False
 

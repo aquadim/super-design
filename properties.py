@@ -72,6 +72,16 @@ class SimpleTextProperty(Property):
         return box
 
 
+# Свойство реквизитов
+class AttributesProperty(Property):
+    def __init__(self, category, obj, prop_name, default_value):
+        super().__init__(category, obj, prop_name, default_value)
+
+    def build_gtk_widget(self, root_node, app):
+        paned = widgets.get_attributes_paned(self.value, app.id_to_binding)
+        return paned
+
+
 class NumProperty(Property):
     def __init__(self, category, obj, prop_name, default_value, label, minv, maxv, step):
         super().__init__(category, obj, prop_name, default_value)
