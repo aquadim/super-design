@@ -63,13 +63,19 @@ def parse_bool(props_obj, tag_name, ns):
 
 
 # Возвращает значение локализованной строки
-def parse_localized_string(props_obj, tag_name, ns):
+def parse_localized_string(language_collection, props_obj, tag_name, ns):
     items = props_obj.find(f"md:{tag_name}", ns).findall("v8:item", ns)
     d = {}
+    parsed = {}
     for i in items:
-        language_code = i.find("v8:lang", ns)
-        content = i.find("v8:content", ns)
-        d[language_code.text] = content.text
+        language_code = i.find("v8:lang", ns).text
+        content = i.find("v8:content", ns).text
+        parsed[language_code] = content
+
+    for lang_ptr in language_collection:
+        if lang_ptr.LanguageCode in parsed:
+            d[lang_ptr] = parsed[lang_ptr.LanguageCode]
+
     return d
 
 
@@ -80,7 +86,7 @@ def parse_enum(props_obj, tag_name, ns, enum_class):
 
 
 # Загрузка реквизитов объекта
-def collect_attributes(obj, parent_node, ns):
+def collect_attributes(configuration, obj, parent_node, ns):
     child_objects = obj.find("md:ChildObjects", ns)
     attributes = child_objects.findall("md:Attribute", ns)
     output = []
@@ -89,7 +95,7 @@ def collect_attributes(obj, parent_node, ns):
 
         attribute = model.AttributeNode(
             parse_string(props, "Name", ns),
-            parse_localized_string(props, "Synonym", ns),
+            parse_localized_string(configuration.store_lang.children, props, "Synonym", ns),
             parse_string(props, "Comment", ns),
             parent_node,
             None,
@@ -111,25 +117,45 @@ def collect_objects(p, configuration, collection_name, mdo_name, items, parse_fu
     return collection
 
 
-# XML -> Язык
-def parse_func_Language(configuration, obj_path, obj, props, ns):
-    return model.LanguageNode(
-        parse_string(props, "Name", ns),
-        parse_localized_string(props, "Synonym", ns),
-        parse_string(props, "Comment", ns),
-        parse_string(props, "LanguageCode", ns),
-    )
+# Загрузка языков
+def collect_languages(p, items, ns):
+    obj_dir = os.path.join(p, "Languages")
+    collection = []
+    props_objs = []
+
+    for item in items:
+        obj_path    = Path(os.path.join(obj_dir, item.text + ".xml"))
+        mdo         = ET.parse(obj_path).getroot()
+        obj         = mdo.find("md:Language", ns)
+        props       = obj.find("md:Properties", ns)
+
+        lang = model.LanguageNode(
+            parse_string(props, "Name", ns),
+            None,
+            parse_string(props, "Comment", ns),
+            parse_string(props, "LanguageCode", ns),
+        )
+
+        collection.append(lang)
+        props_objs.append(props)
+
+    for idx, item in enumerate(collection):
+        # Загрузить синонимы для всех языков
+        props = props_objs[idx]
+        item.Synonym = parse_localized_string(collection, props, "Synonym", ns)
+
+    return collection
 
 
 # XML -> Подсистема
 def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
     subsystem = model.SubsystemNode(
         parse_string(props, "Name", ns),
-        parse_localized_string(props, "Synonym", ns),
+        parse_localized_string(configuration.store_lang.children, props, "Synonym", ns),
         parse_string(props, "Comment", ns),
         parse_bool(props, "IncludeInCommandInterface", ns),
         parse_bool(props, "UseOneCommand", ns),
-        parse_localized_string(props, "Explanation", ns),
+        parse_localized_string(configuration.store_lang.children, props, "Explanation", ns),
     )
 
     # Состав подсистемы
@@ -174,7 +200,7 @@ def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
 def parse_func_Catalog(configuration, obj_path, obj, props, ns):
     node = model.CatalogNode(
         parse_string(props, "Name", ns),
-        parse_localized_string(props, "Synonym", ns),
+        parse_localized_string(configuration.store_lang.children, props, "Synonym", ns),
         parse_string(props, "Comment", ns),
         parse_bool(props, "Hierarchical", ns),
         parse_enum(props, "HierarchyType", ns, model.HierarchyType),
@@ -182,7 +208,7 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
         parse_int(props, "LevelCount", ns),
         parse_bool(props, "FoldersOnTop", ns)
     )
-    attributes = collect_attributes(obj, node, ns)
+    attributes = collect_attributes(configuration, obj, node, ns)
     if len(attributes) != 0:
         node.store_attribute.add_bulk(attributes)
 
@@ -196,7 +222,7 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
 def parse_func_CommonModule(configuration, obj_path, obj, props, ns):
     node = model.CommonModuleNode(
         parse_string(props, "Name", ns),
-        parse_localized_string(props, "Synonym", ns),
+        parse_localized_string(configuration.store_lang.children, props, "Synonym", ns),
         parse_string(props, "Comment", ns),
         parse_bool(props, "Global", ns),
         parse_bool(props, "ClientManagedApplication", ns),
@@ -227,10 +253,15 @@ def xml_to_model(p):
     mdo = tree.getroot()
     conf = mdo.find("md:Configuration", ns)
     props = conf.find("md:Properties", ns)
+    root_children = conf.find("md:ChildObjects", ns)
+
+    # Загрузка языков
+    languages_xml = get_dumped_objects(root_children, "Language", ns)
+    languages = collect_languages(p, languages_xml, ns)
 
     configuration = model.RootNode(
         parse_string(props, "Name", ns),
-        parse_localized_string(props, "Synonym", ns),
+        parse_localized_string(languages, props, "Synonym", ns),
         parse_string(props, "Comment", ns),
         parse_bool(props, "IncludeHelpInContents", ns),
         "TODO!!!",
@@ -243,29 +274,49 @@ def xml_to_model(p):
         parse_bool(props, "UseOrdinaryFormInManagedApplication", ns),
     )
 
-    root_children = conf.find("md:ChildObjects", ns)
-
-    # Загрузка языков
-    languages_xml = get_dumped_objects(root_children, "Language", ns)
-    languages = collect_objects(p, configuration, "Languages", "Language", languages_xml, parse_func_Language, ns)
     for obj in languages:
         configuration.store_lang.append(obj)
 
+
     # Загрузка справочников
     catalogs_xml = get_dumped_objects(root_children, "Catalog", ns)
-    catalogs = collect_objects(p, configuration, "Catalogs", "Catalog", catalogs_xml, parse_func_Catalog, ns)
+    catalogs = collect_objects(
+        p,
+        configuration,
+        "Catalogs",
+        "Catalog",
+        catalogs_xml,
+        parse_func_Catalog,
+        ns
+    )
     for obj in catalogs:
         configuration.store_catalog.append(obj)
 
     # Загрузка общих модулей
     common_modules_xml = get_dumped_objects(root_children, "CommonModule", ns)
-    common_modules = collect_objects(p, configuration, "CommonModules", "CommonModule", common_modules_xml, parse_func_CommonModule, ns)
+    common_modules = collect_objects(
+        p,
+        configuration,
+        "CommonModules",
+        "CommonModule",
+        common_modules_xml,
+        parse_func_CommonModule,
+        ns
+    )
     for obj in common_modules:
         configuration.store_commonmodule.append(obj)
 
     # Загрузка подсистем
     subsystems_xml = get_dumped_objects(root_children, "Subsystem", ns)
-    subsystems = collect_objects(p, configuration, "Subsystems", "Subsystem", subsystems_xml, parse_func_Subsystem, ns)
+    subsystems = collect_objects(
+        p,
+        configuration,
+        "Subsystems",
+        "Subsystem",
+        subsystems_xml,
+        parse_func_Subsystem,
+        ns
+    )
     for obj in subsystems:
         configuration.store_subsystem.children.append(obj)
 

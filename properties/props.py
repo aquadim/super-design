@@ -212,46 +212,16 @@ class LocalisedStringProperty(Property):
 
         # Открытие окна редактирования локализованной строки
         def clicked(btn, ex):
-            win = Gtk.Window()
-            win.set_title("Редактирование локализованной строки")
-            win.set_destroy_with_parent(True)
-            win.set_modal(True)
-            win.set_default_size(512,256)
-
-            sw = Gtk.ScrolledWindow()
-            page = Gtk.Box()
-            page.set_orientation(Gtk.Orientation.VERTICAL)
-            page.set_margin_start(16)
-            page.set_margin_end(16)
-            page.set_margin_top(16)
-            page.set_margin_bottom(16)
-            page.set_spacing(16)
-
-            for language in root_node.store_lang.children:
-                lang_box = Gtk.Box()
-                lang_box.set_orientation(Gtk.Orientation.VERTICAL)
-
-                lang_label = Gtk.Label(label=language.name)
-                lang_label.set_halign(Gtk.Align.START)
-
-                if self.big:
-                    buf = Gtk.TextBuffer.new()
-                    buf.set_text(self.value[language.LanguageCode],-1)
-                    lang_entry = Gtk.TextView.new_with_buffer(buf)
-                else:
-                    lang_entry = Gtk.Entry.new_with_buffer(Gtk.EntryBuffer.new(
-                        self.value[language.LanguageCode],
-                        -1
-                    ))
-
-                lang_box.append(lang_label)
-                lang_box.append(lang_entry)
-                page.append(lang_box)
-
-            sw.set_child(page)
-            win.set_child(sw)
+            win = widgets.get_localised_string_editor_window(
+                self.obj,
+                self.prop_name,
+                self.value,
+                ex.big,
+                app
+            )
             win.present()
-        menu_button.connect('clicked', clicked, self.obj)
+
+        menu_button.connect('clicked', clicked, self)
 
         # Контейнер поле ввода + кнопка менюшки
         boxentry = Gtk.Box()
@@ -267,7 +237,6 @@ class LocalisedStringProperty(Property):
 
         # Упаковка
         def on_destroy(w,signal_id):
-            print("on destoy: disconnect")
             root_node.store_lang.children.disconnect(signal_id)
 
         box = Gtk.Box()
