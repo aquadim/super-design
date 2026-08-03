@@ -4,7 +4,6 @@ gi.require_version("Gtk", "4.0")
 gi.require_version('Gdk', '4.0')
 gi.require_version("GtkSource", "5")
 from gi.repository import Gtk, GObject, GtkSource, Gdk, Gio
-import model
 import loading
 import widgets
 from pathlib import Path
@@ -17,10 +16,9 @@ class SuperDesign(Gtk.Application):
         # Сборка модели
         self.configuration = loading.xml_to_model(Path("/home/kor/code/super/example/"))
 
-        # Сборщики GTK виджетов
+        # Сборщик GTK
         self.builder = None
 
-        self.window = None
         self.notebook = None
         self.connect("activate", self.on_activate)
         self.tabs = {}
@@ -28,13 +26,15 @@ class SuperDesign(Gtk.Application):
         # какому id соответствует привязка имени
         self.id_to_binding = {}
 
+    # Действие выхода из приложения
     def action_quit(self, action, param):
         self.quit()
 
+    # Загрузка приложения
     def do_startup(self):
         Gtk.Application.do_startup(self)
 
-        # ВЫХОД
+        # ВЫХОД (ctrl+q)
         action = Gio.SimpleAction.new("quit", None)
         action.connect("activate", self.action_quit)
         self.add_action(action)
@@ -135,7 +135,7 @@ class SuperDesign(Gtk.Application):
 
     # Активация приложения
     def on_activate(self, app):
-        # css
+        # Загрузка CSS приложения
         css_provider = Gtk.CssProvider()
         css_provider.load_from_string("""
             frame{background-color: @theme_bg_color;}
@@ -157,19 +157,20 @@ class SuperDesign(Gtk.Application):
         )
 
         # --- Построение интерфейса --- #
-        # Главное окно
         self.builder = Gtk.Builder()
         self.builder.add_from_file("ui/root4.ui")
 
-        self.window = self.builder.get_object("main-window")
+        # Вкладки
         self.notebook = self.builder.get_object("main-notebook")
         self.notebook.set_scrollable(True)
 
-        paned = self.builder.get_object("main-paned")
-
         # Заполнение дерева конфигурации
-        paned.set_start_child(widgets.get_configuration_tree(self.configuration, self.id_to_binding, self))
+        paned = self.builder.get_object("main-paned")
+        paned.set_start_child(
+            widgets.get_configuration_tree(self)
+        )
 
+        # Комбинации клавиш
         c = Gtk.ShortcutController()
         a = Gtk.CallbackAction.new(
             lambda *_a: self.debug_action(),
@@ -178,17 +179,16 @@ class SuperDesign(Gtk.Application):
         )
         t = Gtk.ShortcutTrigger.parse_string("<Control>g")
         s = Gtk.Shortcut.new(t, a)
-
         c.add_shortcut(s)
-        self.window.add_controller(c)
 
-        self.window.set_application(self)
-        self.window.present()
+        # Представление окна
+        window = self.builder.get_object("main-window")
+        window.add_controller(c)
+        window.set_application(self)
+        window.present()
 
     def debug_action(self):
         print("doing debug action")
-        self.configuration.store_catalog.children[0].store_attribute.children.append(model.AttributeNode("added",None,None,self.configuration,None))
-        #self.configuration.store_lang.children.append(model.LanguageNode("добавленный язык","синоним","коммент","added"))
 
 
 app = SuperDesign()

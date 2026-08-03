@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 
+# Возвращает все объекты указанного класса из Configuration.xml
 def get_dumped_objects(root_children, kind, ns):
     return root_children.findall(f"md:{kind}", ns)
 
@@ -26,36 +27,42 @@ def get_object_ext_dir(obj_path):
 
 
 # Возвращает путь к модулю
+# Для /Catalogs/УИ_Алгоритмы.xml
+# Вывод /Catalogs/УИ_Алгоритмы.xml/Ext/Module.bsl
 def get_module_path(obj_path):
     return os.path.join(get_object_ext_dir(obj_path), "Module.bsl")
 
 
 # Возвращает путь к модулю объекта
+# Для /Catalogs/УИ_Алгоритмы.xml
+# Вывод /Catalogs/УИ_Алгоритмы.xml/Ext/ObjectModule.bsl
 def get_object_module_path(obj_path):
     return os.path.join(get_object_ext_dir(obj_path), "ObjectModule.bsl")
 
 
 # Возвращает путь к модулю менеджера объекта
+# Для /Catalogs/УИ_Алгоритмы.xml
+# Вывод /Catalogs/УИ_Алгоритмы.xml/Ext/ManagerModule.bsl
 def get_manager_module_path(obj_path):
     return os.path.join(get_object_ext_dir(obj_path), "ManagerModule.bsl")
 
 
-# Получает строку из свойств
+# Возвращает значение строкового свойства
 def parse_string(props_obj, tag_name, ns):
     return props_obj.find("md:"+tag_name, ns).text
 
 
-# Получает число из свойств
+# Возвращает значение численного свойства
 def parse_int(props_obj, tag_name, ns):
     return int(props_obj.find("md:"+tag_name, ns).text)
 
 
-# Получает булевое значение из свойств
+# Возвращает значение булевого свойства
 def parse_bool(props_obj, tag_name, ns):
     return props_obj.find(f"md:{tag_name}", ns).text == "true"
 
 
-# Получает локализованную строку из свойств
+# Возвращает значение локализованной строки
 def parse_localized_string(props_obj, tag_name, ns):
     items = props_obj.find(f"md:{tag_name}", ns).findall("v8:item", ns)
     d = {}
@@ -66,13 +73,14 @@ def parse_localized_string(props_obj, tag_name, ns):
     return d
 
 
+# Возвращает значение перечисления свойства
 def parse_enum(props_obj, tag_name, ns, enum_class):
     value = props_obj.find(f"md:{tag_name}", ns).text
     return enum_class.__members__[value]
 
 
-# Парсит реквизиты из объекта
-def parse_attributes(obj, parent_node, ns):
+# Загрузка реквизитов объекта
+def collect_attributes(obj, parent_node, ns):
     child_objects = obj.find("md:ChildObjects", ns)
     attributes = child_objects.findall("md:Attribute", ns)
     output = []
@@ -90,7 +98,7 @@ def parse_attributes(obj, parent_node, ns):
     return output
 
 
-# Загрузка языков
+# Загрузка объектов конфигурации
 def collect_objects(p, configuration, collection_name, mdo_name, items, parse_func, ns):
     obj_dir = os.path.join(p, collection_name)
     collection = []
@@ -103,6 +111,7 @@ def collect_objects(p, configuration, collection_name, mdo_name, items, parse_fu
     return collection
 
 
+# XML -> Язык
 def parse_func_Language(configuration, obj_path, obj, props, ns):
     return model.LanguageNode(
         parse_string(props, "Name", ns),
@@ -112,6 +121,7 @@ def parse_func_Language(configuration, obj_path, obj, props, ns):
     )
 
 
+# XML -> Подсистема
 def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
     subsystem = model.SubsystemNode(
         parse_string(props, "Name", ns),
@@ -160,6 +170,7 @@ def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
     return subsystem
 
 
+# XML -> Справочник
 def parse_func_Catalog(configuration, obj_path, obj, props, ns):
     node = model.CatalogNode(
         parse_string(props, "Name", ns),
@@ -171,7 +182,7 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
         parse_int(props, "LevelCount", ns),
         parse_bool(props, "FoldersOnTop", ns)
     )
-    attributes = parse_attributes(obj, node, ns)
+    attributes = collect_attributes(obj, node, ns)
     if len(attributes) != 0:
         node.store_attribute.add_bulk(attributes)
 
@@ -181,6 +192,7 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
     return node
 
 
+# XML -> Общий модуль
 def parse_func_CommonModule(configuration, obj_path, obj, props, ns):
     node = model.CommonModuleNode(
         parse_string(props, "Name", ns),
@@ -201,6 +213,7 @@ def parse_func_CommonModule(configuration, obj_path, obj, props, ns):
     return node
 
 
+# Строит модель конфигурации по выгрузке из XML файлов
 def xml_to_model(p):
     ns = {
         "md": "http://v8.1c.ru/8.3/MDClasses",
