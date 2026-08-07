@@ -7,6 +7,7 @@
     </style>
     <property name="orientation">vertical</property>
     <property name="visible">false</property>
+    <property name="spacing">0</property>
 
     <!--Подпись-->
     <child>
@@ -65,6 +66,40 @@
                 <property name="label">...</property>
               </object>
             </child>
+          </object>
+        </child>
+      </object>
+    </child>
+
+    <!--Комментарий-->
+    <child>
+      <object class="GtkBox" id="container-comment">
+        <style>
+          <class name="p-3"/>
+        </style>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="label-comment">
+            <property name="label">Комментарий</property>
+            <property name="halign">start</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry" id="entry-comment"></object>
+        </child>
+      </object>
+    </child>
+
+    <!--Режим пароля-->
+    <child>
+      <object class="GtkBox" id="container-passwordmode">
+        <style>
+          <class name="p-3"/>
+        </style>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkCheckButton" id="check-passwordmode">
+            <property name="label">Режим пароля</property>
           </object>
         </child>
       </object>

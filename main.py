@@ -14,7 +14,7 @@ class SuperDesign(Gtk.Application):
         super().__init__(application_id="com.super.design")
 
         # Сборка модели
-        self.configuration = loading.xml_to_model(Path("/home/kor/code/super/example/"))
+        self.configuration = loading.xml_to_model(Path("/home/kor/code/super/unfexport/"))
 
         # Сборщик GTK
         self.builder = None
@@ -30,6 +30,10 @@ class SuperDesign(Gtk.Application):
     def action_quit(self, action, param):
         self.quit()
 
+    # Действие выгрузки
+    def action_export(self, action, param):
+        self.configuration.export(Path("./test-export"))
+
     # Загрузка приложения
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -39,6 +43,12 @@ class SuperDesign(Gtk.Application):
         action.connect("activate", self.action_quit)
         self.add_action(action)
         self.set_accels_for_action("app.quit", ["<Control>q"])
+
+        # ЭКСПОРТ (ctrl+e)
+        action = Gio.SimpleAction.new("export", None)
+        action.connect("activate", self.action_export)
+        self.add_action(action)
+        self.set_accels_for_action("app.export", ["<Control>e"])
 
         # Построение менюбара
         menubar_builder = Gtk.Builder()

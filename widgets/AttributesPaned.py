@@ -15,6 +15,13 @@ class OnActivateEventData:
         self.bindings.clear()
 
 
+class OnFocusChangeEventData:
+	__slots__ = ('obj','prop_name')
+	def __init__(self, obj, prop_name):
+		self.obj = obj
+		self.prop_name = prop_name
+
+
 def lv_factory_setup(_factory, list_item):
     label = Gtk.Label(xalign=0.0)
     list_item.set_child(label)
@@ -40,6 +47,20 @@ def lv_factory_unbind(_factory, list_item, binding_map):
     if node.id in binding_map:
         binding_map[node.id].unbind()
         del binding_map[node.id]
+
+
+def setup_text_entry(widget, obj, prop_name):
+    text = getattr(obj, prop_name, "") or ""
+    widget.set_text(text)
+
+    def on_focus_change(src, has_focus, ev_data):
+        setattr(ev_data.obj, ev_data.prop_name, src.get_text())
+
+    widget.connect(
+        "notify::has-focus",
+        on_focus_change,
+        OnFocusChangeEventData(obj, prop_name)
+    )
 
 
 def on_attribute_selected(view, pos, ev_data):
@@ -70,6 +91,20 @@ def on_attribute_selected(view, pos, ev_data):
         entry_name,
         "text",
         GObject.BindingFlags.BIDIRECTIONAL
+    ))
+
+    # Комментарий
+    entry_comment = b.get_object("entry-comment")
+    setup_text_entry(entry_comment, attribute, "Comment")
+
+    # Режим пароля
+    check_passwordmode = b.get_object("check-passwordmode")
+    check_passwordmode.set_active(attribute.PasswordMode)
+    ev_data.bindings.append(attribute.bind_property(
+        "PasswordMode",
+        check_passwordmode,
+        "active",
+        GObject.BindingFlags.SYNC_CREATE
     ))
 
 

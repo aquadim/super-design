@@ -1,6 +1,9 @@
 from gi.repository import GObject, Gio
 from .enums import (NodeType,CategoryType,SourceCodeType,DefaultRunMode,
 ConfigurationExtensionCompatibilityMode,HierarchyType)
+
+from .Node import Node
+from .StoreNode import StoreNode
 import properties
 
 # Класс для ленивой загрузки кода
@@ -24,132 +27,6 @@ class LazySourceCode:
                 self.content = ""
             self.loaded = True
         return self.content
-
-
-# Узел конфигурации
-class Node(GObject.Object):
-    __gtype_name__ = 'DataObject'
-    emoji = "👽"
-    can_display_properties_page = False
-
-    def __init__(self, id, Name, Synonym, Comment, node_type, children=[]):
-        super().__init__()
-        self.id = id
-        self._Name = Name
-        self.Synonym = Synonym
-        self.Comment = Comment
-        self.node_type = node_type
-        self.children = children
-
-    @GObject.Property(type=str, default=None)
-    def name(self):
-        return self._Name
-
-    @name.setter
-    def name(self, value):
-        self._Name = value
-
-    def get_properties(self):
-        return [
-            properties.BindTextProperty(CategoryType.GENERAL, self, 'name', self.name, "Имя"),
-            properties.LocalisedStringProperty(CategoryType.GENERAL, self, 'Synonym', self.Synonym, "Синоним"),
-            properties.SimpleTextProperty(CategoryType.GENERAL, self, 'Comment', self.Comment, "Комментарий"),
-        ]
-
-
-# Корневой узел
-class RootNode(Node):
-    emoji = "🟡"
-    can_display_properties_page = True
-
-    def __init__(
-        self,
-        Name,
-        Synonym,
-        Comment,
-        IncludeHelpInContents,
-        HelpHTMLContent,
-        ConfigurationExtensionCompatibilityMode,
-        DefaultRunMode,
-        Vendor,
-        Version,
-        UpdateCatalogAddress,
-        UseManagedFormInOrdinaryApplication,
-        UseOrdinaryFormInManagedApplication):
-
-        ID = "root"
-
-        # Хранилища объектов
-        self.store_lang = StoreNode("⋮💬", "Языки", ID)
-        self.store_catalog = StoreNode("⋮📦", "Справочники", ID)
-        self.store_subsystem = StoreNode("⋮🗂️", "Подсистемы", ID)
-        self.store_commonmodule = StoreNode("⋮📃", "Общие модули", ID)
-
-        super().__init__(
-            ID,
-            Name,
-            Synonym,
-            Comment,
-            NodeType.CONFIGURATION,
-            [
-                self.store_subsystem,
-                self.store_commonmodule,
-                self.store_lang,
-                self.store_catalog,
-            ]
-        )
-        self.IncludeHelpInContents = IncludeHelpInContents
-        self.HelpHTMLContent = HelpHTMLContent
-        self.ConfigurationExtensionCompatibilityMode = ConfigurationExtensionCompatibilityMode
-        self.DefaultRunMode = DefaultRunMode
-        self.Vendor = Vendor
-        self.Version = Version
-        self.UseManagedFormInOrdinaryApplication = UseManagedFormInOrdinaryApplication
-        self.UseOrdinaryFormInManagedApplication = UseOrdinaryFormInManagedApplication
-        self.UpdateCatalogAddress = UpdateCatalogAddress
-
-    def get_properties(self):
-        return super().get_properties() + [
-            properties.EnumProperty(CategoryType.GENERAL, self, 'DefaultRunMode', self.DefaultRunMode, "Основной режим запуска"),
-            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'Vendor', self.Vendor, "Поставщик"),
-            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'Version', self.Version, "Версия"),
-            properties.SimpleTextProperty(CategoryType.DEVELOPMENT, self, 'UpdateCatalogAddress', self.UpdateCatalogAddress, "Адрес каталога обновлений"),
-            properties.BoolProperty(CategoryType.GENERAL, self, 'UseManagedFormInOrdinaryApplication', self.UseManagedFormInOrdinaryApplication, "Использовать управляемые формы в обычном приложении"),
-            properties.BoolProperty(CategoryType.GENERAL, self, 'UseOrdinaryFormInManagedApplication', self.UseOrdinaryFormInManagedApplication, "Использовать обычные формы в управляемом приложении"),
-            properties.BoolProperty(CategoryType.HELP, self, 'IncludeHelpInContents', self.IncludeHelpInContents, "Включать в содержание справки"),
-            properties.SimpleTextProperty(CategoryType.HELP, self, 'HelpHTMLContent', self.HelpHTMLContent, "Справка")
-        ]
-
-
-# Узел для хранения чего-либо
-class StoreNode(Node):
-    emoji = "📁"
-    can_display_properties_page = False
-
-    def __init__(self, emoji, name, owner_node_id):
-        super().__init__(
-            owner_node_id+".Storage."+name,
-            name,
-            None,
-            None,
-            NodeType.STORAGE,
-            Gio.ListStore.new(Node)
-        )
-        self.emoji = emoji
-        self.id_to_node = {}
-
-    def append(self, node):
-        self.children.append(node)
-        self.id_to_node[node.id] = node
-
-    def add_bulk(self, lst):
-        for item in lst:
-            self.id_to_node[item.id] = item
-        self.children.splice(0, 0, lst)
-
-    def get_properties(self):
-        return []
-
 
 # Язык
 class LanguageNode(Node):
@@ -345,6 +222,7 @@ class AttributeNode(Node):
         Comment,
         ParentNode,
         Type,
+        PasswordMode,
     ):
         super().__init__(
             f"{ParentNode.id}.Attribute.{name}",
@@ -356,7 +234,9 @@ class AttributeNode(Node):
         )
         self.ParentNode = ParentNode
         self.Type = Type
+        self.PasswordMode = PasswordMode
 
     def get_properties(self):
         return super().get_properties() + [
+            properties.BoolProperty(CategoryType.NO, self, "PasswordMode", self.value, "Режим пароля"),
         ]

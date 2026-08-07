@@ -41,6 +41,7 @@ class CategoryType(Enum):
     SOURCECODE          = 6
     SUBSYSTEMCONTENT    = 7
     ATTRIBUTES          = 8
+    NO                  = 9
 
     def written(self):
         return translate_enum(
@@ -53,6 +54,7 @@ class CategoryType(Enum):
             CategoryType.SOURCECODE, "</> Программный код",
             CategoryType.SUBSYSTEMCONTENT, "✅ Состав подсистемы",
             CategoryType.ATTRIBUTES, "➖ Реквизиты",
+            CategoryType.NO, "(без категории)",
         )
 
     # Возвращает вес категории. 0 - минимум, 10001 - максимум
@@ -103,12 +105,14 @@ class DefaultRunMode(Enum):
 
 
 class ConfigurationExtensionCompatibilityMode(Enum):
-    Version8_5_4 = 1
+    Version8_5_4 = 8*5*4
+    Version8_3_25 = 8*3*25
 
     def written(self):
         return translate_enum(
             self,
-            ConfigurationExtensionCompatibilityMode.Version8_5_4, "8.5.4"
+            ConfigurationExtensionCompatibilityMode.Version8_5_4, "8.5.4",
+            ConfigurationExtensionCompatibilityMode.Version8_3_25, "8.3.25",
         )
 
 

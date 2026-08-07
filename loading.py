@@ -99,6 +99,7 @@ def collect_attributes(configuration, obj, parent_node, ns):
             parse_string(props, "Comment", ns),
             parent_node,
             None,
+            parse_bool(props, "PasswordMode", ns),
         )
         output.append(attribute)
     return output
@@ -241,6 +242,8 @@ def parse_func_CommonModule(configuration, obj_path, obj, props, ns):
 
 # Строит модель конфигурации по выгрузке из XML файлов
 def xml_to_model(p):
+    type_storage = model.TypeStorage()
+
     ns = {
         "md": "http://v8.1c.ru/8.3/MDClasses",
         "v8": "http://v8.1c.ru/8.1/data/core",
