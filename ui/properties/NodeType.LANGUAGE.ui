@@ -1,0 +1,18 @@
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkNotebook" id="container">
+    <property name="tab-pos">left</property>
+
+    <child>
+      <object class="GtkBox" id="general">
+        <property name="orientation">vertical</property>
+        <slot type="text" label="Имя" bind="name"/>
+        <slot type="localised" label="Синоним" bind="Synonym" />
+        <slot type="text" label="Комментарий" bind="Comment"/>
+        <slot type="text" label="Код языка" bind="LanguageCode"/>
+      </object>
+    </child>
+    <slot type="tab" label="Основное"/>
+
+  </object>
+</interface>

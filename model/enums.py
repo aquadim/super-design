@@ -19,6 +19,8 @@ class NodeType(Enum):
     SUBSYSTEM = 5
     COMMONMODULE = 6
     ATTRIBUTE = 7
+    DOCUMENT = 8
+    TABULAR_SECTION = 9
 
     def written(self):
         return translate_enum(
@@ -29,6 +31,8 @@ class NodeType(Enum):
             NodeType.SUBSYSTEM, "Подсистема",
             NodeType.COMMONMODULE, "Общий модуль",
             NodeType.ATTRIBUTE, "Реквизит",
+            NodeType.DOCUMENT, "Документ",
+            NodeType.TABULAR_SECTION, "Табличная часть",
         )
 
 

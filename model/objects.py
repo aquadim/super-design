@@ -46,12 +46,7 @@ class LanguageNode(Node):
 
     def get_properties(self):
         return super().get_properties() + [
-            properties.SimpleTextProperty(
-                CategoryType.LANG,
-                self,
-                'LanguageCode',
-                self.LanguageCode,
-                "Код языка"),
+            properties.Text("LanguageCode", self, self.LanguageCode),
         ]
 
 

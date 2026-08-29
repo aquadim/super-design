@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/super/design">
+    <file preprocess="xml-stripblanks">ui/root4.ui</file>
+    <file preprocess="xml-stripblanks">ui/menu.ui</file>
+    <file>ui/app.css</file>
+
+
+    <file preprocess="xml-stripblanks">ui/properties/NodeType.CONFIGURATION.compiled.ui</file>
+    <file preprocess="xml-stripblanks">ui/properties/NodeType.LANGUAGE.compiled.ui</file>
+  </gresource>
+</gresources>

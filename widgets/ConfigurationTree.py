@@ -8,7 +8,6 @@ BINDING_PREFIX = "configuration-tree"
 def when_storage_node_changes(src, pos, rem, add, expander):
     expander.set_hide_expander(len(src) == 0)
 
-
 # Функция построения Gio модели
 def create_gio_model(item, user_data):
 	children = getattr(item, "children")
@@ -30,7 +29,6 @@ def create_gio_model(item, user_data):
 		gio_model.append(c)
 	return gio_model
 
-
 def factory_setup(_factory, list_item):
 	label = Gtk.Label(xalign=0.0)
 	expander = Gtk.TreeExpander()
@@ -38,7 +36,7 @@ def factory_setup(_factory, list_item):
 	list_item.set_child(expander)
 
 
-def factory_bind(_factory, list_item, binding_map):
+def factory_bind(_factory, list_item, app):
 	expander = list_item.get_child()
 	label = expander.get_child()
 
@@ -56,19 +54,19 @@ def factory_bind(_factory, list_item, binding_map):
 		"label",
 		GObject.BindingFlags.SYNC_CREATE,
 		lambda binding, value: f'{node.emoji} {value}')
-	binding_map[BINDING_PREFIX+node.id] = binding
+	app.bindings[BINDING_PREFIX+node.id] = binding
 
 	expander.set_list_row(tree_row)
 
 
-def factory_unbind(_factory, list_item, binding_map):
+def factory_unbind(_factory, list_item, app):
 	tree_row = list_item.get_item()
 	node = tree_row.get_item()
 
 	# Удаление привязки данных
-	if BINDING_PREFIX+node.id in binding_map:
-		binding_map[BINDING_PREFIX+node.id].unbind()
-		del binding_map[BINDING_PREFIX+node.id]
+	if BINDING_PREFIX+node.id in app.bindings:
+		app.bindings[BINDING_PREFIX+node.id].unbind()
+		del app.bindings[BINDING_PREFIX+node.id]
 
 
 def on_selected(view, pos, app):
@@ -102,8 +100,8 @@ def get_configuration_tree(app):
     )
     factory = Gtk.SignalListItemFactory()
     factory.connect("setup", factory_setup)
-    factory.connect("bind", factory_bind, app.id_to_binding)
-    factory.connect("unbind", factory_unbind, app.id_to_binding)
+    factory.connect("bind", factory_bind, app)
+    factory.connect("unbind", factory_unbind, app)
 
     selection = Gtk.SingleSelection(model=tree_model) # Можно выбрать только один предмет
 

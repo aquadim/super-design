@@ -96,11 +96,12 @@
           <keyword>неопределено</keyword>
           <keyword>null</keyword>
           <keyword>экспорт</keyword>
-<keyword>и</keyword>
-<keyword>или</keyword>
-<keyword>не</keyword>
-<keyword>ИначеЕсли</keyword>
-<keyword>асинх</keyword>
+          <keyword>и</keyword>
+          <keyword>или</keyword>
+          <keyword>не</keyword>
+          <keyword>ИначеЕсли</keyword>
+          <keyword>асинх</keyword>
+          <keyword>ждать</keyword>
         </context>
 
         <context id="boolean" style-ref="boolean">

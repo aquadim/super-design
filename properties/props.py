@@ -4,6 +4,43 @@ from gi.repository import Gtk, GObject
 import widgets
 import sys
 
+class BindText:
+    def __init__(self, prop_name, obj, value):
+        self.prop_name = prop_name
+        self.obj = obj
+        self.value = value
+    
+    def bind(self, builder):
+        w = builder.get_object(self.prop_name)
+        buf = Gtk.EntryBuffer.new(self.value, -1)
+        w.set_buffer(buf)
+        w.bind_property('text', self.obj, self.prop_name, GObject.BindingFlags.SYNC_CREATE)
+
+class Localised:
+    def __init__(self, prop_name, obj, value):
+        self.prop_name = prop_name
+        self.obj = obj
+        self.value = value
+    
+    def bind(self, builder):
+        pass
+
+class Text:
+    def __init__(self, prop_name, obj, value):
+        self.prop_name = prop_name
+        self.obj = obj
+        self.value = value
+    
+    def bind(self, builder):
+
+        # Связка с данными
+        def on_focus_change(src, ex):
+            setattr(self.obj, self.prop_name, src.get_buffer().get_text())
+        print(self.value)
+        w = builder.get_object(self.prop_name)
+        buf = Gtk.EntryBuffer.new(self.value, -1)
+        w.set_buffer(buf)
+        w.connect("notify::has-focus", on_focus_change)
 
 class Property:
     def __init__(self, category, obj, prop_name, default_value):

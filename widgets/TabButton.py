@@ -4,6 +4,7 @@ from gi.repository import Gtk
 def get_notebook_tab_button():
     tab_box = Gtk.Box()
     tab_box.set_orientation(Gtk.Orientation.HORIZONTAL)
+    tab_box.set_halign(Gtk.Align.START)
 
     label = Gtk.Label()
 

@@ -1,5 +1,6 @@
 import gi
 import sys
+import os
 gi.require_version("Gtk", "4.0")
 gi.require_version('Gdk', '4.0')
 gi.require_version("GtkSource", "5")
@@ -13,18 +14,19 @@ class SuperDesign(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="com.super.design")
 
-        # Сборка модели
-        self.configuration = loading.xml_to_model(Path("/home/kor/code/super/unfexport/"))
+        self.bindings = {}
 
-        # Сборщик GTK
-        self.builder = None
+        # Загрузка ресурсов
+        resource_path = os.path.join(os.path.dirname(__file__), "resources.gresource")
+        resource = Gio.Resource.load(resource_path)
+        Gio.resources_register(resource)
+
+        # Сборка модели
+        self.configuration = loading.xml_to_model(Path("/home/kor/code/super/example/"))
 
         self.notebook = None
         self.connect("activate", self.on_activate)
         self.tabs = {}
-
-        # какому id соответствует привязка имени
-        self.id_to_binding = {}
 
     # Действие выхода из приложения
     def action_quit(self, action, param):
@@ -52,12 +54,12 @@ class SuperDesign(Gtk.Application):
 
         # Построение менюбара
         menubar_builder = Gtk.Builder()
-        menubar_builder.add_from_file("ui/menu.ui")
+        menubar_builder.add_from_resource("/com/super/design/ui/menu.ui")
         self.set_menubar(menubar_builder.get_object("menubar"))
 
     def build_right_editor(self, code):
         style_manager = GtkSource.StyleSchemeManager.get_default()
-        style = style_manager.get_scheme("solarized-light")
+        style = style_manager.get_scheme("solarized-dark")
 
         lm = GtkSource.LanguageManager()
         language = lm.get_language("bsl")
@@ -96,13 +98,13 @@ class SuperDesign(Gtk.Application):
 
     # Открывает вкладку со свойствами узла конфигурации
     def open_properties(self, node):
+        # Если вкладка со свойствами уже существует, открываем существующую
         if node.id in self.tabs:
             page_num = self.notebook.page_num(self.tabs[node.id])
             self.notebook.set_current_page(page_num)
             return
 
-        props = node.get_properties()
-        page, refs = widgets.get_properties_page(props, self.configuration, self)
+        page = widgets.get_properties_page(node)
 
         tab_box, tab_label, close_btn = widgets.get_notebook_tab_button()
         node.bind_property(
@@ -112,7 +114,6 @@ class SuperDesign(Gtk.Application):
             GObject.BindingFlags.SYNC_CREATE,
             lambda _binding,value: f'{node.emoji} {node.node_type.written()} "{value}"'
         )
-        widgets.modify_page(node, page, refs)
 
         page_num = self.notebook.append_page(page, tab_box)
         close_btn.connect("clicked", self.close_tab, node.id)
@@ -147,17 +148,7 @@ class SuperDesign(Gtk.Application):
     def on_activate(self, app):
         # Загрузка CSS приложения
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_string("""
-            frame{background-color: @theme_bg_color;}
-            .bsl-editor{font: 20px Cascadia Code;}
-            .conf-tree * {
-                font-size: 18px;
-                padding: 0;
-                margin: 1px;
-            }
-            .big{font-size: 24pt;}
-            .p-3{margin:8px;}
-        """)
+        css_provider.load_from_resource("/com/super/design/ui/app.css")
 
         # Добавляем поставщика стилей к экрану
         Gtk.StyleContext.add_provider_for_display(
@@ -167,15 +158,15 @@ class SuperDesign(Gtk.Application):
         )
 
         # --- Построение интерфейса --- #
-        self.builder = Gtk.Builder()
-        self.builder.add_from_file("ui/root4.ui")
+        builder = Gtk.Builder()
+        builder.add_from_resource("/com/super/design/ui/root4.ui")
 
         # Вкладки
-        self.notebook = self.builder.get_object("main-notebook")
+        self.notebook = builder.get_object("main-notebook")
         self.notebook.set_scrollable(True)
 
         # Заполнение дерева конфигурации
-        paned = self.builder.get_object("main-paned")
+        paned = builder.get_object("main-paned")
         paned.set_start_child(
             widgets.get_configuration_tree(self)
         )
@@ -192,7 +183,7 @@ class SuperDesign(Gtk.Application):
         c.add_shortcut(s)
 
         # Представление окна
-        window = self.builder.get_object("main-window")
+        window = builder.get_object("main-window")
         window.add_controller(c)
         window.set_application(self)
         window.present()
