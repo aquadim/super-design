@@ -88,6 +88,7 @@ class SourceCodeType(Enum):
     MODULE      = 3
     MANAGED_APPLICATION_MODULE = 4
     SESSION_MODULE = 5
+    EXTERNAL_CONNECTION_MODULE = 6
 
     def written(self):
         return translate_enum(
@@ -97,6 +98,7 @@ class SourceCodeType(Enum):
             SourceCodeType.MODULE, "Модуль",
             SourceCodeType.MANAGED_APPLICATION_MODULE, "Модуль приложения",
             SourceCodeType.SESSION_MODULE, "Модуль сеанса приложения",
+            SourceCodeType.EXTERNAL_CONNECTION_MODULE, "Модуль внешнего соединения",
         )
 
 
@@ -115,12 +117,14 @@ class DefaultRunMode(Enum):
 class ConfigurationExtensionCompatibilityMode(Enum):
     Version8_5_4 = 8*5*4
     Version8_3_25 = 8*3*25
+    Version8_3_27 = 8*3*27
 
     def written(self):
         return translate_enum(
             self,
             ConfigurationExtensionCompatibilityMode.Version8_5_4, "8.5.4",
             ConfigurationExtensionCompatibilityMode.Version8_3_25, "8.3.25",
+            ConfigurationExtensionCompatibilityMode.Version8_3_27, "8.3.27",
         )
 
 

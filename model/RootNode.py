@@ -66,41 +66,12 @@ class RootNode(Node):
 		return super().get_properties() + [
 			p.SourceCode("ManagedApplicationModule", self, self.ManagedApplicationModule),
 			p.SourceCode("SessionModule", self, self.SessionModule),
+			p.SourceCode("ExternalConnectionModule", self, self.ExternalConnectionModule),
+			p.Text("Vendor", self, self.Vendor),
+			p.Text("Version", self, self.Version),
+			p.Text("UpdateCatalogAddress", self, self.UpdateCatalogAddress),
+			p.Enum("DefaultRunMode", self, self.DefaultRunMode),
 		]
-		# return super().get_properties() + [
-		# 	p.EnumProperty(
-		# 		CategoryType.GENERAL,
-		# 		self, 'DefaultRunMode', self.DefaultRunMode,
-		# 		"Основной режим запуска"),
-		# 	p.SimpleTextProperty(
-		# 		CategoryType.DEVELOPMENT,
-		# 		self, 'Vendor', self.Vendor,
-		# 		"Поставщик"),
-		# 	p.SimpleTextProperty(
-		# 		CategoryType.DEVELOPMENT,
-		# 		self,
-		# 		'Version', self.Version,
-		# 		"Версия"),
-		# 	p.SimpleTextProperty(
-		# 		CategoryType.DEVELOPMENT,
-		# 		self, 'UpdateCatalogAddress', self.UpdateCatalogAddress,
-		# 		"Адрес каталога обновлений"),
-        #     p.BoolProperty(
-		# 		CategoryType.GENERAL,
-		# 		self, 'UseManagedFormInOrdinaryApplication', self.UseManagedFormInOrdinaryApplication,
-		# 		"Использовать управляемые формы в обычном приложении"),
-		# 	p.BoolProperty(
-		# 		CategoryType.GENERAL,
-		# 		self, 'UseOrdinaryFormInManagedApplication', self.UseOrdinaryFormInManagedApplication,
-		# 		"Использовать обычные формы в управляемом приложении"),
-		# 	p.BoolProperty(
-		# 		CategoryType.HELP,
-		# 		self, 'IncludeHelpInContents', self.IncludeHelpInContents,
-		# 		"Включать в содержание справки"),
-		# 	p.SimpleTextProperty(
-		# 		CategoryType.HELP, self, 'HelpHTMLContent', self.HelpHTMLContent,
-		# 		"Справка")
-		# 	]
 
 	def export(self, dir_path):
 		ns = get_mdo_ns()

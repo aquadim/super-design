@@ -280,6 +280,14 @@ def xml_to_model(p):
         get_module_path(p, "ManagedApplicationModule.bsl"),
         configuration, 
         model.SourceCodeType.MANAGED_APPLICATION_MODULE)
+    configuration.SessionModule = model.LazySourceCode(
+        get_module_path(p, "SessionModule.bsl"),
+        configuration, 
+        model.SourceCodeType.SESSION_MODULE)
+    configuration.ExternalConnectionModule = model.LazySourceCode(
+        get_module_path(p, "ExternalConnectionModule.bsl"),
+        configuration, 
+        model.SourceCodeType.EXTERNAL_CONNECTION_MODULE)
 
     for obj in languages:
         configuration.store_lang.append(obj)

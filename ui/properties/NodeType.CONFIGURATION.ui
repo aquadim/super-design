@@ -6,12 +6,14 @@
     <child>
       <object class="GtkScrolledWindow">
         <child>
-          <object class="GtkBox" id="general">
+          <object class="GtkBox">
             <property name="orientation">vertical</property>
             <property name="css-classes">p-3</property>
+            <property name="spacing">8</property>
             <slot type="text" label="Имя" bind="name"/>
             <slot type="localised" label="Синоним" bind="Synonym" />
             <slot type="text" label="Комментарий" bind="Comment"/>
+            <slot type="enum" src="DefaultRunMode" label="Основной режим запуска" bind="DefaultRunMode"/>
           </object>
         </child>
       </object>
@@ -21,12 +23,28 @@
     <child>
       <object class="GtkScrolledWindow">
         <child>
-          <object class="GtkGrid" id="code">
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="css-classes">p-3</property>
+            <slot type="text" label="Поставщик" bind="Vendor"/>
+            <slot type="text" label="Версия" bind="Version" />
+            <slot type="text" label="Адрес каталога обновлений" bind="UpdateCatalogAddress"/>
+          </object>
+        </child>
+      </object>
+    </child>
+    <slot type="tab" label="Разработка"/>
+
+    <child>
+      <object class="GtkScrolledWindow">
+        <child>
+          <object class="GtkGrid">
             <property name="row-spacing">8</property>
             <property name="column-spacing">8</property>
             <property name="css-classes">p-3</property>
             <slot type="code" label="Модуль приложения" bind="ManagedApplicationModule" row="0" col="0"/>
             <slot type="code" label="Модуль сеанса" bind="SessionModule" row="0" col="1"/>
+            <slot type="code" label="Модуль внешнего соединения" bind="ExternalConnectionModule" row="0" col="2"/>
           </object>
         </child>
       </object>

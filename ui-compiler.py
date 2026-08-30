@@ -1,5 +1,6 @@
 import os
 from lxml import etree
+from pydoc import locate
 
 def add_property(obj, name, value):
     etree.SubElement(obj, "property", attrib={"name": name}).text = value
@@ -71,6 +72,31 @@ def code(label, bind, column, row):
     
     return btn_c
     
+def enum(label, src):
+    box_c = etree.Element("child")
+    box_o = etree.SubElement(box_c, "object", attrib={"class": "GtkBox"})
+    add_property(box_o, "orientation", "vertical")
+    
+    # Подпись
+    lbl_c = etree.SubElement(box_o, "child")
+    lbl_o = etree.SubElement(lbl_c, "object", attrib={"class": "GtkLabel"})
+    add_property(lbl_o, "label", label)
+    add_property(lbl_o, "halign", "start")
+
+    # Выпадающий список
+    drp_c = etree.SubElement(box_o, "child")
+    drp_o = etree.SubElement(drp_c, "object", attrib={"class": "GtkDropDown"})
+    model_p = etree.SubElement(drp_o, "property", attrib={"name": "model"})
+    
+    stringlist = etree.SubElement(model_p, "object", attrib={"class": "GtkStringList"})
+    items_o = etree.SubElement(stringlist, "items")
+    
+    enum_type = locate("model." + src)
+    enum_items = list(enum_type)
+    for item in enum_items:
+        etree.SubElement(items_o, "item", attrib={"translatable": "yes"}).text = item.written()
+    
+    return box_c
 
 def main():
     files = os.listdir("./ui/properties/")
@@ -101,6 +127,10 @@ def main():
             elif slot_type == "code":
                 # Код
                 to_replace = code(s.get("label"), s.get("bind"), s.get("col"), s.get("row"))
+
+            elif slot_type == "enum":
+                # Перечисление
+                to_replace = enum(s.get("label"), s.get("src"))
             
             parent.replace(s, to_replace)
 

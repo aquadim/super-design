@@ -59,6 +59,17 @@ class SourceCode():
         w = builder.get_object(self.prop_name)
         w.connect("clicked", on_click, self.value)
 
+# Перечисление
+# Пока никуда не привязывается
+class Enum:
+    def __init__(self, prop_name, obj, value):
+        self.prop_name = prop_name
+        self.obj = obj
+        self.value = value
+    
+    def bind(self, builder, app):
+        pass
+
 # Свойство реквизитов
 class AttributesProperty():
     def __init__(self, category, obj, prop_name, default_value):
@@ -103,29 +114,6 @@ class BoolProperty():
         btn.set_active(self.value)
         return btn
 
-
-
-
-
-class EnumProperty():
-    def __init__(self, category, obj, prop_name, default_value, label):
-        super().__init__(category, obj, prop_name, default_value)
-        self.label = label
-
-    def build_gtk_widget(self, root_node, app):
-        enum_type = type(getattr(self.obj, self.prop_name))
-        dropdown = widgets.get_dropdown_from_enum(enum_type, self.value)
-
-        lbl = Gtk.Label(label=self.label)
-        lbl.set_halign(Gtk.Align.START)
-
-        box = Gtk.Box()
-        box.set_orientation(Gtk.Orientation.VERTICAL)
-        box.append(lbl)
-        box.append(dropdown)
-        return box
-
-
 # Свойство состава подсистемы
 class SubsystemContentProperty():
     def __init__(self, category, obj, prop_name, default_value):
@@ -138,7 +126,6 @@ class SubsystemContentProperty():
             self.value,
             app.id_to_binding)
         return sw
-
 
 class LocalisedStringProperty():
     def __init__(self, category, obj, prop_name, default_value, label, big=False):
