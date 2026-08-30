@@ -104,7 +104,7 @@ class SuperDesign(Gtk.Application):
             self.notebook.set_current_page(page_num)
             return
 
-        page = widgets.get_properties_page(node)
+        page = widgets.get_properties_page(node, self)
 
         tab_box, tab_label, close_btn = widgets.get_notebook_tab_button()
         node.bind_property(

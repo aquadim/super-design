@@ -4,113 +4,63 @@ from gi.repository import Gtk, GObject
 import widgets
 import sys
 
+# Текст с привязкой свойств GObject
+# Привязывается к GtkEntry
 class BindText:
     def __init__(self, prop_name, obj, value):
         self.prop_name = prop_name
         self.obj = obj
         self.value = value
     
-    def bind(self, builder):
+    def bind(self, builder, app):
         w = builder.get_object(self.prop_name)
         buf = Gtk.EntryBuffer.new(self.value, -1)
         w.set_buffer(buf)
         w.bind_property('text', self.obj, self.prop_name, GObject.BindingFlags.SYNC_CREATE)
 
+# Локализованная строка
+# Привязывается к контейнеру (GtkBox)
 class Localised:
     def __init__(self, prop_name, obj, value):
         self.prop_name = prop_name
         self.obj = obj
         self.value = value
     
-    def bind(self, builder):
+    def bind(self, builder, app):
         pass
 
+# Просто текст
+# Привязывается к GtkEntry
 class Text:
     def __init__(self, prop_name, obj, value):
         self.prop_name = prop_name
         self.obj = obj
         self.value = value
     
-    def bind(self, builder):
-
-        # Связка с данными
+    def bind(self, builder, app):
         def on_focus_change(src, ex):
             setattr(self.obj, self.prop_name, src.get_buffer().get_text())
-        print(self.value)
         w = builder.get_object(self.prop_name)
         buf = Gtk.EntryBuffer.new(self.value, -1)
         w.set_buffer(buf)
         w.connect("notify::has-focus", on_focus_change)
 
-class Property:
-    def __init__(self, category, obj, prop_name, default_value):
-        self.category = category
-        self.obj = obj
+# Исходный код
+# Привязывается к GtkButton
+class SourceCode():
+    def __init__(self, prop_name, obj, value):
         self.prop_name = prop_name
-        self.value = default_value
+        self.obj = obj
+        self.value = value
 
-    def build_gtk_widget(self, root_node, app):
-        raise RuntimeError("Виджет не установлен для свойства")
-
-
-class BindTextProperty(Property):
-    def __init__(self, category, obj, prop_name, default_value, label):
-        super().__init__(category, obj, prop_name, default_value)
-        self.label = label
-
-    def build_gtk_widget(self, root_node, app):
-        # Подпись свойства
-        lbl = Gtk.Label(label=self.label)
-        lbl.set_halign(Gtk.Align.START)
-
-        # Связка с данными
-        default_buffer = Gtk.EntryBuffer.new(self.value, -1)
-        entry = Gtk.Entry.new_with_buffer(default_buffer)
-        binding = entry.bind_property(
-            'text',
-            self.obj,
-            self.prop_name,
-            GObject.BindingFlags.BIDIRECTIONAL
-        )
-
-        # При удалении поля ввода отключить привязку
-        entry.connect("destroy", lambda *_a: binding.unbind())
-
-        # Контейнер
-        box = Gtk.Box()
-        box.set_orientation(Gtk.Orientation.VERTICAL)
-        box.append(lbl)
-        box.append(entry)
-        return box
-
-
-class SimpleTextProperty(Property):
-    def __init__(self, category, obj, prop_name, default_value, label):
-        super().__init__(category, obj, prop_name, default_value)
-        self.label = label
-
-    def build_gtk_widget(self, root_node, app):
-        # Подпись свойства
-        lbl = Gtk.Label(label=self.label)
-        lbl.set_halign(Gtk.Align.START)
-
-        # Связка с данными
-        def on_focus_change(src,ex):
-            setattr(self.obj, self.prop_name, src.get_buffer().get_text())
-
-        default_buffer = Gtk.EntryBuffer.new(self.value, -1)
-        entry = Gtk.Entry.new_with_buffer(default_buffer)
-        entry.connect("notify::has-focus", on_focus_change)
-
-        box = Gtk.Box()
-        box.set_orientation(Gtk.Orientation.VERTICAL)
-        box.append(lbl)
-        box.append(entry)
-        return box
-
+    def bind(self, builder, app):
+        def on_click(src, value):
+            app.open_code(value)
+        w = builder.get_object(self.prop_name)
+        w.connect("clicked", on_click, self.value)
 
 # Свойство реквизитов
-class AttributesProperty(Property):
+class AttributesProperty():
     def __init__(self, category, obj, prop_name, default_value):
         super().__init__(category, obj, prop_name, default_value)
 
@@ -119,7 +69,7 @@ class AttributesProperty(Property):
         return paned
 
 
-class NumProperty(Property):
+class NumProperty():
     def __init__(self, category, obj, prop_name, default_value, label, minv, maxv, step):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
@@ -143,7 +93,7 @@ class NumProperty(Property):
         return box
 
 
-class BoolProperty(Property):
+class BoolProperty():
     def __init__(self, category, obj, prop_name, default_value, label):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
@@ -154,23 +104,10 @@ class BoolProperty(Property):
         return btn
 
 
-class SourceCodeProperty(Property):
-    def __init__(self, category, obj, prop_name, default_value, label):
-        super().__init__(category, obj, prop_name, default_value)
-        self.label = label
-
-    def build_gtk_widget(self, root_node, app):
-        btn = Gtk.Button.new_with_label(self.label)
-        btn.set_halign(Gtk.Align.START)
-
-        def on_click(src, value):
-            app.open_code(self.value)
-
-        btn.connect("clicked", on_click, self.value)
-        return btn
 
 
-class EnumProperty(Property):
+
+class EnumProperty():
     def __init__(self, category, obj, prop_name, default_value, label):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label
@@ -190,7 +127,7 @@ class EnumProperty(Property):
 
 
 # Свойство состава подсистемы
-class SubsystemContentProperty(Property):
+class SubsystemContentProperty():
     def __init__(self, category, obj, prop_name, default_value):
         super().__init__(category, obj, prop_name, default_value)
 
@@ -203,7 +140,7 @@ class SubsystemContentProperty(Property):
         return sw
 
 
-class LocalisedStringProperty(Property):
+class LocalisedStringProperty():
     def __init__(self, category, obj, prop_name, default_value, label, big=False):
         super().__init__(category, obj, prop_name, default_value)
         self.label = label

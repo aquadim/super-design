@@ -53,6 +53,25 @@ def localised(label):
 
     return child
 
+def code(label, bind, column, row):
+    btn_c = etree.Element("child")
+    btn_o = etree.SubElement(btn_c, "object", attrib={"class": "GtkButton", "id": bind})
+
+    # Положение в сетке
+    layout = etree.SubElement(btn_o, "layout")
+    add_property(layout, "column", column)
+    add_property(layout, "row", row)
+    
+    # Подпись кнопки
+    lbl_c = etree.SubElement(btn_o, "child")
+    lbl_o = etree.SubElement(lbl_c, "object", attrib={"class": "GtkLabel"})
+    add_property(lbl_o, "label", label)
+    add_property(lbl_o, "wrap", "true")
+    add_property(lbl_o, "justify", "center")
+    
+    return btn_c
+    
+
 def main():
     files = os.listdir("./ui/properties/")
     for f in files:
@@ -78,6 +97,10 @@ def main():
             elif slot_type == "localised":
                 # Локализованная строка
                 to_replace = localised(s.get("label"))
+
+            elif slot_type == "code":
+                # Код
+                to_replace = code(s.get("label"), s.get("bind"), s.get("col"), s.get("row"))
             
             parent.replace(s, to_replace)
 

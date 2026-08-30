@@ -29,8 +29,8 @@ def get_object_ext_dir(obj_path):
 # Возвращает путь к модулю
 # Для /Catalogs/УИ_Алгоритмы.xml
 # Вывод /Catalogs/УИ_Алгоритмы.xml/Ext/Module.bsl
-def get_module_path(obj_path):
-    return os.path.join(get_object_ext_dir(obj_path), "Module.bsl")
+def get_module_path(obj_path, module_name="Module.bsl"):
+    return os.path.join(get_object_ext_dir(obj_path), module_name)
 
 
 # Возвращает путь к модулю объекта
@@ -276,6 +276,10 @@ def xml_to_model(p):
         parse_bool(props, "UseManagedFormInOrdinaryApplication", ns),
         parse_bool(props, "UseOrdinaryFormInManagedApplication", ns),
     )
+    configuration.ManagedApplicationModule = model.LazySourceCode(
+        get_module_path(p, "ManagedApplicationModule.bsl"),
+        configuration, 
+        model.SourceCodeType.MANAGED_APPLICATION_MODULE)
 
     for obj in languages:
         configuration.store_lang.append(obj)

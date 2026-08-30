@@ -86,6 +86,8 @@ class SourceCodeType(Enum):
     OBJECT      = 1
     MANAGER     = 2
     MODULE      = 3
+    MANAGED_APPLICATION_MODULE = 4
+    SESSION_MODULE = 5
 
     def written(self):
         return translate_enum(
@@ -93,6 +95,8 @@ class SourceCodeType(Enum):
             SourceCodeType.OBJECT, "Модуль объекта",
             SourceCodeType.MANAGER, "Модуль менеджера",
             SourceCodeType.MODULE, "Модуль",
+            SourceCodeType.MANAGED_APPLICATION_MODULE, "Модуль приложения",
+            SourceCodeType.SESSION_MODULE, "Модуль сеанса приложения",
         )
 
 

@@ -5,7 +5,7 @@ from .xmltools import (
 	tostring,
 	new_mdo_xml,
 )
-from .enums import NodeType, CategoryType
+from .enums import NodeType
 from .Node import Node
 from .StoreNode import StoreNode
 
@@ -59,9 +59,14 @@ class RootNode(Node):
 		self.UseManagedFormInOrdinaryApplication = UseManagedFormInOrdinaryApplication
 		self.UseOrdinaryFormInManagedApplication = UseOrdinaryFormInManagedApplication
 		self.UpdateCatalogAddress = UpdateCatalogAddress
+		self.ManagedApplicationModule = None
+		self.SessionModule = None
 
 	def get_properties(self):
-		return super().get_properties()
+		return super().get_properties() + [
+			p.SourceCode("ManagedApplicationModule", self, self.ManagedApplicationModule),
+			p.SourceCode("SessionModule", self, self.SessionModule),
+		]
 		# return super().get_properties() + [
 		# 	p.EnumProperty(
 		# 		CategoryType.GENERAL,
