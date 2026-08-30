@@ -6,6 +6,7 @@ from .PageModify import modify_page
 from .SubsystemContent import get_subsystem_content_tree
 from .AttributesPaned import get_attributes_paned
 from .LocalisedStringEditorWindow import get_localised_string_editor_window
+from .ObjectSelector import get_single_object_selector
 
 __all__ = [
 	"get_configuration_tree",
@@ -16,5 +17,6 @@ __all__ = [
 	"get_subsystem_content_tree",
 	"get_attributes_paned",
 	"get_localised_string_editor_window",
+	"get_single_object_selector",
 ]
 

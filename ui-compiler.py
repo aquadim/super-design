@@ -18,7 +18,7 @@ def tab(label):
 
     return child
 
-def text_slot(label, id):
+def text_slot(label, bind):
     child = etree.Element("child")
     object = etree.SubElement(child, "object", attrib={"class": "GtkBox"})
     etree.SubElement(object, "property", attrib={"name": "orientation"}).text = "vertical"
@@ -26,11 +26,11 @@ def text_slot(label, id):
     heading_label(label, object)
 
     entry_c = etree.SubElement(object, "child")
-    etree.SubElement(entry_c, "object", attrib={"class": "GtkEntry", "id": id})
+    etree.SubElement(entry_c, "object", attrib={"class": "GtkEntry", "id": bind})
 
     return child
 
-def localised(label):
+def entry_and_dots(label, bind, entry_is_always_inactive):
     child = etree.Element("child")
     object = etree.SubElement(child, "object", attrib={"class": "GtkBox"})
     etree.SubElement(object, "property", attrib={"name": "orientation"}).text = "vertical"
@@ -39,13 +39,15 @@ def localised(label):
 
     # Коробка с вводом и кнопкой
     box_c = etree.SubElement(object, "child")
-    box_o = etree.SubElement(box_c, "object", attrib={"class": "GtkBox"})
+    box_o = etree.SubElement(box_c, "object", attrib={"class": "GtkBox", "id": bind})
     etree.SubElement(box_o, "property", attrib={"name": "orientation"}).text = "horizontal"
 
     # Поле ввода
     entry_c = etree.SubElement(box_o, "child")
     entry_o = etree.SubElement(entry_c, "object", attrib={"class": "GtkEntry"})
     add_property(entry_o, "hexpand", "true")
+    if entry_is_always_inactive:
+        add_property(entry_o, "can-focus", "false")
 
     # Кнопка "..."
     btn_c = etree.SubElement(box_o, "child")
@@ -122,7 +124,7 @@ def main():
 
             elif slot_type == "localised":
                 # Локализованная строка
-                to_replace = localised(s.get("label"))
+                to_replace = entry_and_dots(s.get("label"), s.get("bind"), False)
 
             elif slot_type == "code":
                 # Код
@@ -131,6 +133,10 @@ def main():
             elif slot_type == "enum":
                 # Перечисление
                 to_replace = enum(s.get("label"), s.get("src"))
+            
+            elif slot_type == "object":
+                # Объект конфигурации
+                to_replace = entry_and_dots(s.get("label"), s.get("bind"), True)
             
             parent.replace(s, to_replace)
 

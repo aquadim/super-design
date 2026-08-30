@@ -3,6 +3,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GObject
 import widgets
 import sys
+import model
 
 # Текст с привязкой свойств GObject
 # Привязывается к GtkEntry
@@ -28,6 +29,10 @@ class Localised:
     
     def bind(self, builder, app):
         pass
+        # box = builder.get_object(self.prop_name)
+        
+        # ent = box.children[0]
+        # btn = box.childrenn[1]
 
 # Просто текст
 # Привязывается к GtkEntry
@@ -69,6 +74,54 @@ class Enum:
     
     def bind(self, builder, app):
         pass
+
+# Объект конфигурации
+class Object:
+    def __init__(self, prop_name, obj, value, storage_node, non_null):
+        self.prop_name = prop_name
+        self.obj = obj
+        self.value = value
+        self.storage_node = storage_node
+        self.entry = None
+        self.window = None
+        self.non_null = non_null
+    
+    # Функция обратного вызова для обновления значения
+    def update_callback(self, new_value):
+        if new_value != None and new_value.node_type == model.NodeType.STORAGE:
+            return
+        setattr(self.obj, self.prop_name, new_value)
+        if new_value == None:
+            self.entry.set_text("<не выбрано>")
+        else:
+            self.entry.set_text(new_value._Name)
+        if self.window != None:
+            self.window.close()
+        self.window = None
+    
+    def cancel_callback(self):
+        self.window.close()
+        self.window = None
+    
+    def bind(self, builder, app):
+        def on_clicked(src):
+            if self.window != None:
+                self.window.activate()
+            else:
+                self.window = widgets.get_single_object_selector(
+                    self.storage_node,
+                    self.non_null,
+                    self.update_callback, 
+                    self.cancel_callback
+                )
+                self.window.present()
+
+        box = builder.get_object(self.prop_name)
+        self.entry = box.get_first_child()
+        btn = self.entry.get_next_sibling()
+        
+        self.update_callback(self.value)
+        btn.connect("clicked", on_clicked)
 
 # Свойство реквизитов
 class AttributesProperty():

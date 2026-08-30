@@ -17,15 +17,18 @@ class StoreNode(Node):
             Gio.ListStore.new(Node)
         )
         self.emoji = emoji
+        self.name_to_node = {}
         self.id_to_node = {}
 
     def append(self, node):
         self.children.append(node)
         self.id_to_node[node.id] = node
+        self.name_to_node[node._Name] = node
 
     def add_bulk(self, lst):
         for item in lst:
             self.id_to_node[item.id] = item
+            self.name_to_node[item._Name] = item
         self.children.splice(0, 0, lst)
 
     def get_properties(self):

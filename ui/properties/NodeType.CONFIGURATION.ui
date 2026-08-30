@@ -38,6 +38,19 @@
     <child>
       <object class="GtkScrolledWindow">
         <child>
+          <object class="GtkBox">
+            <property name="spacing">8</property>
+            <property name="css-classes">p-3</property>
+            <slot type="object" label="Основной язык" bind="DefaultLanguage"/>
+          </object>
+        </child>
+      </object>
+    </child>
+    <slot type="tab" label="Представление"/>
+
+    <child>
+      <object class="GtkScrolledWindow">
+        <child>
           <object class="GtkGrid">
             <property name="row-spacing">8</property>
             <property name="column-spacing">8</property>

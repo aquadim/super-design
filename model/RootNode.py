@@ -61,6 +61,7 @@ class RootNode(Node):
 		self.UpdateCatalogAddress = UpdateCatalogAddress
 		self.ManagedApplicationModule = None
 		self.SessionModule = None
+		self.DefaultLanguage = None
 
 	def get_properties(self):
 		return super().get_properties() + [
@@ -71,6 +72,7 @@ class RootNode(Node):
 			p.Text("Version", self, self.Version),
 			p.Text("UpdateCatalogAddress", self, self.UpdateCatalogAddress),
 			p.Enum("DefaultRunMode", self, self.DefaultRunMode),
+			p.Object("DefaultLanguage", self, self.DefaultLanguage, self.store_lang, True),
 		]
 
 	def export(self, dir_path):

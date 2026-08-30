@@ -84,6 +84,10 @@ def parse_enum(props_obj, tag_name, ns, enum_class):
     value = props_obj.find(f"md:{tag_name}", ns).text
     return enum_class.__members__[value]
 
+def parse_object(props_obj, tag_name, ns, storage_node):
+    value = props_obj.find(f"md:{tag_name}", ns).text
+    _, name = value.split(".")
+    return storage_node.name_to_node[name]
 
 # Загрузка реквизитов объекта
 def collect_attributes(configuration, obj, parent_node, ns):
@@ -292,6 +296,8 @@ def xml_to_model(p):
     for obj in languages:
         configuration.store_lang.append(obj)
 
+    # Язык по умолчанию
+    configuration.DefaultLanguage = parse_object(props, "DefaultLanguage", ns, configuration.store_lang)
 
     # Загрузка справочников
     catalogs_xml = get_dumped_objects(root_children, "Catalog", ns)
