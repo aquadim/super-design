@@ -31,5 +31,5 @@ class StoreNode(Node):
             self.name_to_node[item._Name] = item
         self.children.splice(0, 0, lst)
 
-    def get_properties(self):
+    def get_properties(self, configuration):
         return []

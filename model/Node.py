@@ -24,10 +24,10 @@ class Node(GObject.Object):
     def name(self, value):
         self._Name = value
 
-    def get_properties(self):
+    def get_properties(self, configuration):
         return [
             p.BindText("name", self, self._Name),
-            p.Localised("Synonym", self, self.Synonym),
+            p.Localised("Synonym", self, configuration.store_lang),
             p.Text("Comment", self, self.Comment),
         ]
 

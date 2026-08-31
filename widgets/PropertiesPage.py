@@ -6,7 +6,7 @@ def get_properties_page(node, app):
     container = builder.get_object("container")
 
     # Выполнение привязок данных
-    properties = node.get_properties()
+    properties = node.get_properties(app.configuration)
     for p in properties:
         p.bind(builder, app)
 

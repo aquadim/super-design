@@ -1,6 +1,5 @@
-from gi.repository import GObject, Gio
-from .enums import (NodeType,CategoryType,SourceCodeType,DefaultRunMode,
-ConfigurationExtensionCompatibilityMode,HierarchyType)
+from gi.repository import Gio
+from .enums import (NodeType,CategoryType)
 
 from .Node import Node
 from .StoreNode import StoreNode
@@ -44,8 +43,8 @@ class LanguageNode(Node):
         )
         self.LanguageCode = LanguageCode
 
-    def get_properties(self):
-        return super().get_properties() + [
+    def get_properties(self, configuration):
+        return super().get_properties(configuration) + [
             properties.Text("LanguageCode", self, self.LanguageCode),
         ]
 

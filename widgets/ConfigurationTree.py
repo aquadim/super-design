@@ -115,6 +115,6 @@ def get_configuration_tree(app):
 
     scrolled = Gtk.ScrolledWindow()
     scrolled.set_child(column_view)
-    scrolled.set_size_request(512, -1)
+    scrolled.set_size_request(256, -1)
     scrolled.add_css_class("conf-tree")
     return scrolled

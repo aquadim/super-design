@@ -208,7 +208,7 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
         parse_localized_string(configuration.store_lang.children, props, "Synonym", ns),
         parse_string(props, "Comment", ns),
         parse_bool(props, "Hierarchical", ns),
-        parse_enum(props, "HierarchyType", ns, model.HierarchyType),
+        parse_enum(props, "HierarchyType", ns, model.enums.HierarchyType),
         parse_bool(props, "LimitLevelCount", ns),
         parse_int(props, "LevelCount", ns),
         parse_bool(props, "FoldersOnTop", ns)
@@ -217,8 +217,8 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
     if len(attributes) != 0:
         node.store_attribute.add_bulk(attributes)
 
-    node.ObjectModule = model.LazySourceCode(get_object_module_path(obj_path), node, model.SourceCodeType.OBJECT)
-    node.ManagerModule = model.LazySourceCode(get_manager_module_path(obj_path), node, model.SourceCodeType.MANAGER)
+    node.ObjectModule = model.LazySourceCode(get_object_module_path(obj_path), node, model.enums.SourceCodeType.OBJECT)
+    node.ManagerModule = model.LazySourceCode(get_manager_module_path(obj_path), node, model.enums.SourceCodeType.MANAGER)
 
     return node
 
@@ -239,7 +239,7 @@ def parse_func_CommonModule(configuration, obj_path, obj, props, ns):
         None
     )
 
-    node.Module = model.LazySourceCode(get_module_path(obj_path), node, model.SourceCodeType.MODULE)
+    node.Module = model.LazySourceCode(get_module_path(obj_path), node, model.enums.SourceCodeType.MODULE)
 
     return node
 
@@ -272,8 +272,8 @@ def xml_to_model(p):
         parse_string(props, "Comment", ns),
         parse_bool(props, "IncludeHelpInContents", ns),
         "TODO!!!",
-        parse_enum(props, "ConfigurationExtensionCompatibilityMode", ns, model.ConfigurationExtensionCompatibilityMode),
-        parse_enum(props, "DefaultRunMode", ns, model.DefaultRunMode),
+        parse_enum(props, "ConfigurationExtensionCompatibilityMode", ns, model.enums.ConfigurationExtensionCompatibilityMode),
+        parse_enum(props, "DefaultRunMode", ns, model.enums.DefaultRunMode),
         parse_string(props, "Vendor", ns),
         parse_string(props, "Version", ns),
         parse_string(props, "UpdateCatalogAddress", ns),
@@ -283,15 +283,15 @@ def xml_to_model(p):
     configuration.ManagedApplicationModule = model.LazySourceCode(
         get_module_path(p, "ManagedApplicationModule.bsl"),
         configuration, 
-        model.SourceCodeType.MANAGED_APPLICATION_MODULE)
+        model.enums.SourceCodeType.MANAGED_APPLICATION_MODULE)
     configuration.SessionModule = model.LazySourceCode(
         get_module_path(p, "SessionModule.bsl"),
         configuration, 
-        model.SourceCodeType.SESSION_MODULE)
+        model.enums.SourceCodeType.SESSION_MODULE)
     configuration.ExternalConnectionModule = model.LazySourceCode(
         get_module_path(p, "ExternalConnectionModule.bsl"),
         configuration, 
-        model.SourceCodeType.EXTERNAL_CONNECTION_MODULE)
+        model.enums.SourceCodeType.EXTERNAL_CONNECTION_MODULE)
 
     for obj in languages:
         configuration.store_lang.append(obj)

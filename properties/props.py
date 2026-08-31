@@ -22,17 +22,46 @@ class BindText:
 # Локализованная строка
 # Привязывается к контейнеру (GtkBox)
 class Localised:
-    def __init__(self, prop_name, obj, value):
+    def __init__(self, prop_name, obj, languages_store_node):
         self.prop_name = prop_name
         self.obj = obj
-        self.value = value
+        self.languages_store_node = languages_store_node
+        self.window = None
+    
+    # Функция обратного вызова для обновления значения в поле ввода
+    def update_callback(self, new_value):
+        print(new_value)
+        setattr(self.obj, self.prop_name, new_value)
+
+        entry_text = "; ".join(list(new_value.values()))
+        self.entry.set_text(entry_text)
+
+        if self.window != None:
+            self.window.close()
+        self.window = None
+    
+    def cancel_callback(self):
+        self.window.close()
+        self.window = None
     
     def bind(self, builder, app):
-        pass
-        # box = builder.get_object(self.prop_name)
+        def on_clicked(src):
+            if self.window == None:
+                self.window = widgets.get_localised_string_editor(
+                    getattr(self.obj, self.prop_name, {}),
+                    app.configuration.store_lang,
+                    False,
+                    self.update_callback,
+                    self.cancel_callback
+                )
+            self.window.present()
+
+        box = builder.get_object(self.prop_name)
+        self.entry = box.get_first_child()
+        btn = self.entry.get_next_sibling()
         
-        # ent = box.children[0]
-        # btn = box.childrenn[1]
+        self.update_callback(getattr(self.obj, self.prop_name, {}))
+        btn.connect("clicked", on_clicked)
 
 # Просто текст
 # Привязывается к GtkEntry

@@ -102,6 +102,7 @@
           <keyword>ИначеЕсли</keyword>
           <keyword>асинх</keyword>
           <keyword>ждать</keyword>
+          <keyword>перем</keyword>
         </context>
 
         <context id="boolean" style-ref="boolean">

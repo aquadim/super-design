@@ -63,8 +63,8 @@ class RootNode(Node):
 		self.SessionModule = None
 		self.DefaultLanguage = None
 
-	def get_properties(self):
-		return super().get_properties() + [
+	def get_properties(self, configuration):
+		return super().get_properties(configuration) + [
 			p.SourceCode("ManagedApplicationModule", self, self.ManagedApplicationModule),
 			p.SourceCode("SessionModule", self, self.SessionModule),
 			p.SourceCode("ExternalConnectionModule", self, self.ExternalConnectionModule),
