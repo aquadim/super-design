@@ -8,9 +8,7 @@ def get_notebook_tab_button():
 
     label = Gtk.Label()
 
-    close_btn = Gtk.Button.new_with_label("[x]")
-    close_btn.add_css_class("flat")
-    close_btn.add_css_class("destructive-action")
+    close_btn = Gtk.Button.new_from_icon_name("window-close")
 
     tab_box.append(label)
     tab_box.append(close_btn)

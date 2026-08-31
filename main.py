@@ -112,7 +112,7 @@ class SuperDesign(Gtk.Application):
             tab_label,
             'label',
             GObject.BindingFlags.SYNC_CREATE,
-            lambda _binding,value: f'{node.emoji} {node.node_type.written()} "{value}"'
+            lambda _binding,value: f'{node.emoji} {value}'
         )
 
         page_num = self.notebook.append_page(page, tab_box)
@@ -128,7 +128,7 @@ class SuperDesign(Gtk.Application):
 
         def get_tab_transform_func(sourcecode_):
             def func(binding, value):
-                return f'{sourcecode_.node.emoji} {sourcecode_.code_type.written()} "{value}"'
+                return f'{sourcecode_.node.emoji} {value} ({sourcecode_.code_type.written()})'
             return func
 
         sourcecode.node.bind_property(
