@@ -35,60 +35,13 @@ class NodeType(Enum):
             NodeType.TABULAR_SECTION, "Табличная часть",
         )
 
-
-class CategoryType(Enum):
-    GENERAL             = 1
-    DEVELOPMENT         = 2
-    LANG                = 3
-    HIERARCHY           = 4
-    HELP                = 5
-    SOURCECODE          = 6
-    SUBSYSTEMCONTENT    = 7
-    ATTRIBUTES          = 8
-    NO                  = 9
-
-    def written(self):
-        return translate_enum(
-            self,
-            CategoryType.GENERAL, "📝 Общее",
-            CategoryType.DEVELOPMENT, "👨‍💻 Разработка",
-            CategoryType.LANG, "💬 Язык",
-            CategoryType.HIERARCHY, "📶 Иерархия",
-            CategoryType.HELP, "🛟 Справочная информация",
-            CategoryType.SOURCECODE, "</> Программный код",
-            CategoryType.SUBSYSTEMCONTENT, "✅ Состав подсистемы",
-            CategoryType.ATTRIBUTES, "➖ Реквизиты",
-            CategoryType.NO, "(без категории)",
-        )
-
-    # Возвращает вес категории. 0 - минимум, 10001 - максимум
-    def weight(self):
-        if self == CategoryType.GENERAL:
-            return 0
-        elif self == CategoryType.DEVELOPMENT:
-            return 8000
-        elif self == CategoryType.LANG:
-            return 100
-        elif self == CategoryType.HIERARCHY:
-            return 300
-        elif self == CategoryType.HELP:
-            return 10000
-        elif self == CategoryType.SOURCECODE:
-            return 400
-        elif self == CategoryType.SUBSYSTEMCONTENT:
-            return 100
-        elif self == CategoryType.ATTRIBUTES:
-            return 350
-        return 10001
-
-
 class SourceCodeType(Enum):
-    OBJECT      = 1
-    MANAGER     = 2
-    MODULE      = 3
-    MANAGED_APPLICATION_MODULE = 4
-    SESSION_MODULE = 5
-    EXTERNAL_CONNECTION_MODULE = 6
+    OBJECT = 0
+    MANAGER = 1
+    MODULE = 2
+    MANAGED_APPLICATION_MODULE = 3
+    SESSION_MODULE = 4
+    EXTERNAL_CONNECTION_MODULE = 5
 
     def written(self):
         return translate_enum(
@@ -99,6 +52,17 @@ class SourceCodeType(Enum):
             SourceCodeType.MANAGED_APPLICATION_MODULE, "Модуль приложения",
             SourceCodeType.SESSION_MODULE, "Модуль сеанса приложения",
             SourceCodeType.EXTERNAL_CONNECTION_MODULE, "Модуль внешнего соединения",
+        )
+    
+    def help_info(self):
+        return translate_enum(
+            self,
+            SourceCodeType.OBJECT, "Поведение отдельного экземпляра",
+            SourceCodeType.MANAGER, "Статическая функциональность",
+            SourceCodeType.MODULE, "Программный код",
+            SourceCodeType.MANAGED_APPLICATION_MODULE, "Код вызывается при старте системы",
+            SourceCodeType.SESSION_MODULE, "Установка параметров сеанса",
+            SourceCodeType.EXTERNAL_CONNECTION_MODULE, "Используется при работе через COM-соединение",
         )
 
 
@@ -115,9 +79,9 @@ class DefaultRunMode(Enum):
 
 
 class ConfigurationExtensionCompatibilityMode(Enum):
-    Version8_5_4 = 8*5*4
-    Version8_3_25 = 8*3*25
-    Version8_3_27 = 8*3*27
+    Version8_5_4 = 0
+    Version8_3_25 = 1
+    Version8_3_27 = 2
 
     def written(self):
         return translate_enum(
@@ -129,12 +93,34 @@ class ConfigurationExtensionCompatibilityMode(Enum):
 
 
 class HierarchyType(Enum):
-    HierarchyFoldersAndItems = 1
-    HierarchyOfItems = 2
+    HierarchyFoldersAndItems = 0
+    HierarchyOfItems = 1
 
     def written(self):
         return translate_enum(
             self,
             HierarchyType.HierarchyFoldersAndItems, "Иерархия групп и элементов",
             HierarchyType.HierarchyOfItems, "Иерархия элементов",
+        )
+
+class ScriptVariant(Enum):
+    Russian = 0
+    English = 1
+
+    def written(self):
+        return translate_enum(
+            self,
+            ScriptVariant.Russian, "Русский",
+            ScriptVariant.English, "Английский",
+        )
+
+class UsePurpose(Enum):
+    PlatformApplication = 0
+    MobilePlatformApplication = 1
+
+    def written(self):
+        return translate_enum(
+            self,
+            UsePurpose.PlatformApplication, "Приложение для платформы",
+            UsePurpose.MobilePlatformApplication, "Приложение для мобильной платформы",
         )

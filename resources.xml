@@ -7,5 +7,6 @@
 
     <file preprocess="xml-stripblanks">ui/properties/NodeType.CONFIGURATION.compiled.ui</file>
     <file preprocess="xml-stripblanks">ui/properties/NodeType.LANGUAGE.compiled.ui</file>
+    <file preprocess="xml-stripblanks">ui/properties/NodeType.CATALOG.compiled.ui</file>
   </gresource>
 </gresources>

@@ -4,12 +4,18 @@
     <property name="tab-pos">left</property>
 
     <child>
-      <object class="GtkBox" id="general">
-        <property name="orientation">vertical</property>
-        <slot type="text" label="Имя" bind="name"/>
-        <slot type="localised" label="Синоним" bind="Synonym" />
-        <slot type="text" label="Комментарий" bind="Comment"/>
-        <slot type="text" label="Код языка" bind="LanguageCode"/>
+      <object class="GtkScrolledWindow">
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="css-classes">p-3</property>
+            <property name="spacing">8</property>
+            <slot type="text" label="Имя" bind="name"/>
+            <slot type="localised" label="Синоним" bind="Synonym" />
+            <slot type="text" label="Комментарий" bind="Comment"/>
+            <slot type="text" label="Код языка" bind="LanguageCode"/>
+          </object>
+        </child>
       </object>
     </child>
     <slot type="tab" label="Основное"/>

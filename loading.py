@@ -279,6 +279,7 @@ def xml_to_model(p):
         parse_string(props, "UpdateCatalogAddress", ns),
         parse_bool(props, "UseManagedFormInOrdinaryApplication", ns),
         parse_bool(props, "UseOrdinaryFormInManagedApplication", ns),
+        parse_enum(props, "ScriptVariant", ns, model.enums.ScriptVariant),
     )
     configuration.ManagedApplicationModule = model.LazySourceCode(
         get_module_path(p, "ManagedApplicationModule.bsl"),

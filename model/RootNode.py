@@ -27,7 +27,8 @@ class RootNode(Node):
 		Version,
 		UpdateCatalogAddress,
 		UseManagedFormInOrdinaryApplication,
-		UseOrdinaryFormInManagedApplication):
+		UseOrdinaryFormInManagedApplication,
+		ScriptVariant,):
 
 		ID = "root"
 
@@ -62,6 +63,7 @@ class RootNode(Node):
 		self.ManagedApplicationModule = None
 		self.SessionModule = None
 		self.DefaultLanguage = None
+		self.ScriptVariant = ScriptVariant
 
 	def get_properties(self, configuration):
 		return super().get_properties(configuration) + [
@@ -73,6 +75,7 @@ class RootNode(Node):
 			p.Text("UpdateCatalogAddress", self, self.UpdateCatalogAddress),
 			p.Enum("DefaultRunMode", self, self.DefaultRunMode),
 			p.Object("DefaultLanguage", self, self.DefaultLanguage, self.store_lang, True),
+			p.Enum("ScriptVariant", self, self.ScriptVariant),
 		]
 
 	def export(self, dir_path):

@@ -13,8 +13,6 @@
             <slot type="text" label="Имя" bind="name"/>
             <slot type="localised" label="Синоним" bind="Synonym" />
             <slot type="text" label="Комментарий" bind="Comment"/>
-            <slot type="enum" src="DefaultRunMode" label="Основной режим запуска" bind="DefaultRunMode"/>
-            <slot type="enum" src="ScriptVariant" label="Вариант встренного языка" bind="ScriptVariant"/>
           </object>
         </child>
       </object>
@@ -27,27 +25,23 @@
           <object class="GtkBox">
             <property name="orientation">vertical</property>
             <property name="css-classes">p-3</property>
-            <slot type="text" label="Поставщик" bind="Vendor"/>
-            <slot type="text" label="Версия" bind="Version" />
-            <slot type="text" label="Адрес каталога обновлений" bind="UpdateCatalogAddress"/>
-          </object>
-        </child>
-      </object>
-    </child>
-    <slot type="tab" label="Разработка"/>
-
-    <child>
-      <object class="GtkScrolledWindow">
-        <child>
-          <object class="GtkBox">
             <property name="spacing">8</property>
-            <property name="css-classes">p-3</property>
-            <slot type="object" label="Основной язык" bind="DefaultLanguage"/>
+            <slot type="bool" label="Иерархический" bind="Hierarchical"/>
+            <child>
+                <object class="GtkBox" id="bind-to-Hierarchical">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">8</property>
+                    <slot type="enum" src="HierarchyType" label="Вид иерархии" bind="HierarchyType"/>
+                    <slot type="bool" label="Ограничивать уровни иерархии" bind="LimitLevelCount"/>
+                    <slot type="num" label="Количество уровней" min="0.00" max="999.00" bind="LevelCount"/>
+                    <slot type="bool" label="Размещать группы сверху" bind="FoldersOnTop"/>
+                </object>
+            </child>
           </object>
         </child>
       </object>
     </child>
-    <slot type="tab" label="Представление"/>
+    <slot type="tab" label="Иерархия"/>
 
     <child>
       <object class="GtkScrolledWindow">
@@ -56,9 +50,8 @@
             <property name="row-spacing">8</property>
             <property name="column-spacing">8</property>
             <property name="css-classes">p-3</property>
-            <slot type="code" src="MANAGED_APPLICATION_MODULE" bind="ManagedApplicationModule" row="0" col="0"/>
-            <slot type="code" src="SESSION_MODULE" bind="SessionModule" row="0" col="1"/>
-            <slot type="code" src="EXTERNAL_CONNECTION_MODULE" bind="ExternalConnectionModule" row="0" col="2"/>
+            <slot type="code" src="OBJECT" bind="ObjectModule" row="0" col="0"/>
+            <slot type="code" src="MANAGER" bind="ManagerModule" row="0" col="1"/>
           </object>
         </child>
       </object>

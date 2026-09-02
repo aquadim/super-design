@@ -1,5 +1,5 @@
 from gi.repository import Gio
-from .enums import (NodeType,CategoryType)
+from .enums import NodeType
 
 from .Node import Node
 from .StoreNode import StoreNode
@@ -26,28 +26,6 @@ class LazySourceCode:
                 self.content = ""
             self.loaded = True
         return self.content
-
-# Язык
-class LanguageNode(Node):
-    emoji = '💬'
-    can_display_properties_page = True
-
-    def __init__(self, name, Synonym, Comment, LanguageCode):
-        super().__init__(
-            f"Language.{LanguageCode}",
-            name,
-            Synonym,
-            Comment,
-            NodeType.LANGUAGE,
-            []
-        )
-        self.LanguageCode = LanguageCode
-
-    def get_properties(self, configuration):
-        return super().get_properties(configuration) + [
-            properties.Text("LanguageCode", self, self.LanguageCode),
-        ]
-
 
 # Подсистема
 class SubsystemNode(Node):
@@ -154,54 +132,7 @@ class CommonModuleNode(Node):
         ]
 
 
-# Справочник
-class CatalogNode(Node):
-    emoji = '📦'
-    can_display_properties_page = True
 
-    def __init__(
-        self,
-        name,
-        Synonym,
-        Comment,
-        Hierarchical,
-        HierarchyType,
-        LimitLevelCount,
-        LevelCount,
-        FoldersOnTop,
-    ):
-        ID = f"Catalog.{name}"
-
-        self.store_attribute = StoreNode("➖", "Реквизиты", ID)
-
-        super().__init__(
-            ID,
-            name,
-            Synonym,
-            Comment,
-            NodeType.CATALOG,
-            [
-                self.store_attribute,
-            ]
-        )
-
-        self.Hierarchical = Hierarchical
-        self.HierarchyType = HierarchyType
-        self.LimitLevelCount = LimitLevelCount
-        self.LevelCount = LevelCount
-        self.FoldersOnTop = FoldersOnTop
-
-    def get_properties(self):
-        return super().get_properties() + [
-            properties.BoolProperty(CategoryType.HIERARCHY, self, 'Hierarchical', self.Hierarchical, "Иерархический справочник"),
-            properties.EnumProperty(CategoryType.HIERARCHY, self, 'HierarchyType', self.HierarchyType, "Вид иерархии"),
-            properties.BoolProperty(CategoryType.HIERARCHY, self, 'FoldersOnTop', self.FoldersOnTop, "Помещать группы сверху"),
-            properties.BoolProperty(CategoryType.HIERARCHY, self, 'LimitLevelCount', self.LimitLevelCount, "Ограничить количество уровней иерархии"),
-            properties.NumProperty(CategoryType.HIERARCHY, self, 'LevelCount', self.LevelCount, "Количество уровней иерархии",1,None,1),
-            properties.SourceCodeProperty(CategoryType.SOURCECODE, self, 'ManagerModule', self.ManagerModule, "Модуль менеджера"),
-            properties.SourceCodeProperty(CategoryType.SOURCECODE, self, 'ObjectModule', self.ObjectModule, "Модуль объекта"),
-            properties.AttributesProperty(CategoryType.ATTRIBUTES, self, 'store_attribute', self.store_attribute)
-        ]
 
 
 # Реквизит
