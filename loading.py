@@ -211,7 +211,12 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
         parse_enum(props, "HierarchyType", ns, model.enums.HierarchyType),
         parse_bool(props, "LimitLevelCount", ns),
         parse_int(props, "LevelCount", ns),
-        parse_bool(props, "FoldersOnTop", ns)
+        parse_bool(props, "FoldersOnTop", ns),
+        parse_localized_string(configuration.store_lang.children, props, "ObjectPresentation", ns),
+        parse_localized_string(configuration.store_lang.children, props, "ExtendedObjectPresentation", ns),
+        parse_localized_string(configuration.store_lang.children, props, "ListPresentation", ns),
+        parse_localized_string(configuration.store_lang.children, props, "ExtendedListPresentation", ns),
+        parse_localized_string(configuration.store_lang.children, props, "Explanation", ns),
     )
     attributes = collect_attributes(configuration, obj, node, ns)
     if len(attributes) != 0:

@@ -2,7 +2,6 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GObject
 import widgets
-import sys
 import model
 
 # Текст с привязкой свойств GObject
@@ -22,11 +21,12 @@ class BindText:
 # Локализованная строка
 # Привязывается к контейнеру (GtkBox)
 class Localised:
-    def __init__(self, prop_name, obj, languages_store_node):
+    def __init__(self, prop_name, obj, languages_store_node, is_big=False):
         self.prop_name = prop_name
         self.obj = obj
         self.languages_store_node = languages_store_node
         self.window = None
+        self.is_big = is_big
     
     # Функция обратного вызова для обновления значения в поле ввода
     def update_callback(self, new_value):
@@ -49,7 +49,7 @@ class Localised:
                 self.window = widgets.get_localised_string_editor(
                     getattr(self.obj, self.prop_name, {}),
                     app.configuration.store_lang,
-                    False,
+                    self.is_big,
                     self.update_callback,
                     self.cancel_callback
                 )

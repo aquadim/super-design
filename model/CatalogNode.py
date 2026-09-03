@@ -18,6 +18,11 @@ class CatalogNode(Node):
         LimitLevelCount,
         LevelCount,
         FoldersOnTop,
+        ObjectPresentation,
+        ExtendedObjectPresentation,
+        ListPresentation,
+        ExtendedListPresentation,
+        Explanation,
     ):
         ID = f"Catalog.{name}"
 
@@ -39,6 +44,11 @@ class CatalogNode(Node):
         self.LimitLevelCount = LimitLevelCount
         self.LevelCount = LevelCount
         self.FoldersOnTop = FoldersOnTop
+        self.ObjectPresentation = ObjectPresentation
+        self.ExtendedObjectPresentation = ExtendedObjectPresentation
+        self.ListPresentation = ListPresentation
+        self.ExtendedListPresentation = ExtendedListPresentation
+        self.Explanation = Explanation
 
         self.ObjectModule = None
         self.ManagerModule = None
@@ -50,6 +60,11 @@ class CatalogNode(Node):
             p.Bool("FoldersOnTop", self, self.FoldersOnTop),
             p.Bool("LimitLevelCount", self, self.LimitLevelCount),
             p.Num("LevelCount", self, self.LevelCount),
+            p.Localised("ObjectPresentation", self, configuration.store_lang),
+            p.Localised("ExtendedObjectPresentation", self, configuration.store_lang),
+            p.Localised("ListPresentation", self, configuration.store_lang),
+            p.Localised("ExtendedListPresentation", self, configuration.store_lang),
+            p.Localised("Explanation", self, configuration.store_lang, True),
             p.SourceCode("ManagerModule", self, self.ManagerModule),
             p.SourceCode("ObjectModule", self, self.ObjectModule),
             #p.AttributesProperty(CategoryType.ATTRIBUTES, self, 'store_attribute', self.store_attribute)

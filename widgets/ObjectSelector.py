@@ -1,5 +1,6 @@
 from gi.repository import Gtk, Gio, GObject
 import model
+from .Helpers import close_window_on_esc
 
 # Фабрика для колонки "Имя"
 def get_name_factory():
@@ -97,6 +98,7 @@ def get_single_object_selector(storage_node, non_null, update_callback, cancel_c
     body.append(sw)
 
     window = Gtk.Window()
+    close_window_on_esc(window)
     window.set_title("Выберите один объект")
     window.set_child(body)
     window.connect("close-request", lambda src: cancel_callback())

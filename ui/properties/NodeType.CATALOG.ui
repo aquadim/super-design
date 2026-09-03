@@ -26,6 +26,24 @@
             <property name="orientation">vertical</property>
             <property name="css-classes">p-3</property>
             <property name="spacing">8</property>
+            <slot type="localised" label="Представление объекта" bind="ObjectPresentation"/>
+            <slot type="localised" label="Расширенное представление объекта" bind="ExtendedObjectPresentation" />
+            <slot type="localised" label="Представление списка" bind="ListPresentation"/>
+            <slot type="localised" label="Расширенное представление списка" bind="ExtendedListPresentation"/>
+            <slot type="localised" label="Пояснение" bind="Explanation"/>
+          </object>
+        </child>
+      </object>
+    </child>
+    <slot type="tab" label="Представление"/>
+
+    <child>
+      <object class="GtkScrolledWindow">
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="css-classes">p-3</property>
+            <property name="spacing">8</property>
             <slot type="bool" label="Иерархический" bind="Hierarchical"/>
             <child>
                 <object class="GtkBox" id="bind-to-Hierarchical">

@@ -1,13 +1,21 @@
 from gi.repository import Gtk
+from .Helpers import close_window_on_esc
 
 class OnFocusChangeEventData:
-	__slots__ = ('language_ptr', 'updated_dict')
-	def __init__(self, updated_dict, language_ptr):
+	__slots__ = ('language_ptr', 'updated_dict', 'big')
+	def __init__(self, updated_dict, language_ptr, big):
 		self.updated_dict = updated_dict
 		self.language_ptr = language_ptr
+		self.big = big
 
 def on_focus_change(src, has_focus, ev_data):
-	ev_data.updated_dict[ev_data.language_ptr] = src.get_text()
+	if ev_data.big:
+		buffer = src.get_buffer()
+		start_iter = buffer.get_start_iter()
+		end_iter = buffer.get_end_iter()
+		ev_data.updated_dict[ev_data.language_ptr] = buffer.get_text(start_iter, end_iter, False)
+	else:
+		ev_data.updated_dict[ev_data.language_ptr] = src.get_text()
 
 # Возвращает виджет
 def get_localised_string_editor(localised_string, store_lang, big, update_callback, cancel_callback):
@@ -15,7 +23,12 @@ def get_localised_string_editor(localised_string, store_lang, big, update_callba
 	win.set_title("Редактирование локализованного текста")
 	win.set_destroy_with_parent(True)
 	win.set_modal(True)
-	win.set_default_size(512,256)
+	close_window_on_esc(win)
+
+	if big:
+		win.set_default_size(512,512)
+	else:
+		win.set_default_size(512,256)
 
 	sw = Gtk.ScrolledWindow()
 	sw.set_vexpand(True)
@@ -52,6 +65,7 @@ def get_localised_string_editor(localised_string, store_lang, big, update_callba
 			buf = Gtk.TextBuffer.new()
 			buf.set_text(text, -1)
 			lang_entry = Gtk.TextView.new_with_buffer(buf)
+			lang_entry.set_size_request(-1, 64)
 		else:
 			lang_entry = Gtk.Entry.new_with_buffer(Gtk.EntryBuffer.new(
 				text,
@@ -60,7 +74,7 @@ def get_localised_string_editor(localised_string, store_lang, big, update_callba
 		lang_entry.connect(
 			"notify::has-focus",
 			on_focus_change,
-			OnFocusChangeEventData(updated_dict, language)
+			OnFocusChangeEventData(updated_dict, language, big)
 		)
 
 		lang_box.append(lang_label)
@@ -80,11 +94,16 @@ def get_localised_string_editor(localised_string, store_lang, big, update_callba
 	cancel = Gtk.Button(label="Отмена")
 	cancel.connect("clicked", lambda src : cancel_callback())
 	command_bar.append(cancel)
+
+	frame = Gtk.Frame()
+	frame.set_child(sw)
     
 	body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 	body.append(command_bar)
-	body.append(sw)
+	body.append(frame)
 
 	sw.set_child(page)
 	win.set_child(body)
+	win.connect("close-request", lambda src: cancel_callback())
+
 	return win
