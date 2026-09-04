@@ -18,18 +18,20 @@ class StoreNode(Node):
         )
         self.emoji = emoji
         self.name_to_node = {}
-        self.id_to_node = {}
 
     def append(self, node):
         self.children.append(node)
-        self.id_to_node[node.id] = node
-        self.name_to_node[node._Name] = node
+        self.name_to_node[node.name] = node
 
     def add_bulk(self, lst):
         for item in lst:
-            self.id_to_node[item.id] = item
-            self.name_to_node[item._Name] = item
+            self.name_to_node[item.name] = item
         self.children.splice(0, 0, lst)
+    
+    def set_from_dict(self, d):
+        self.name_to_node = d
+        for k in d:
+            self.children.append(d[k])
 
     def get_properties(self, configuration):
         return []

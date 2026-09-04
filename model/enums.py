@@ -124,3 +124,16 @@ class UsePurpose(Enum):
             UsePurpose.PlatformApplication, "Приложение для платформы",
             UsePurpose.MobilePlatformApplication, "Приложение для мобильной платформы",
         )
+
+class SubordinationUse(Enum):
+    ToItems = 0
+    ToFolders = 1
+    ToFoldersAndItems = 2
+
+    def written(self):
+        return translate_enum(
+            self,
+            SubordinationUse.ToItems, "Элементам",
+            SubordinationUse.ToFolders, "Группам",
+            SubordinationUse.ToFoldersAndItems, "Группам и элементам",
+        )

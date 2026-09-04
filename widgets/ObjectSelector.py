@@ -1,37 +1,6 @@
-from gi.repository import Gtk, Gio, GObject
+from gi.repository import Gtk, Gio
 import model
-from .Helpers import close_window_on_esc
-
-# Фабрика для колонки "Имя"
-def get_name_factory():
-    def name_factory_setup(_factory, list_item):
-        label = Gtk.Label(xalign=0.0)
-        expander = Gtk.TreeExpander()
-        expander.set_child(label)
-        list_item.set_child(expander)
-
-    def name_factory_bind(_factory, list_item):
-        expander = list_item.get_child()
-        label = expander.get_child()
-
-        tree_row = list_item.get_item()
-        node = tree_row.get_item()
-
-        # Связка с именем
-        node.bind_property(
-            "name",
-            label,
-            "label",
-            GObject.BindingFlags.SYNC_CREATE,
-            lambda _, value: f'{node.emoji} {value}')
-
-        expander.set_list_row(tree_row)
-
-    name_factory = Gtk.SignalListItemFactory()
-    name_factory.connect("setup", name_factory_setup)
-    name_factory.connect("bind", name_factory_bind)
-
-    return name_factory
+from .Helpers import close_window_on_esc, get_name_factory, create_gio_tree_model
 
 def on_selected(view, pos, update_callback):
 	selection_model = view.get_model()
@@ -41,17 +10,9 @@ def on_selected(view, pos, update_callback):
 		return
 	update_callback(node)
 
-
 def get_single_object_selector(storage_node, non_null, update_callback, cancel_callback):
     root_model = Gio.ListStore.new(model.Node)
     root_model.append(storage_node)
-
-    def create_gio_tree_model(item, user_data):
-        # В узлах хранилища дети хранятся в Gio.ListStore
-        # Благодаря этому, из приложения мы можем добавлять
-        # объекты конфигурации и они сразу отобразятся в интерфейсе
-        if item.node_type == model.NodeType.STORAGE:
-            return item.children
 
     tree_model = Gtk.TreeListModel.new(
         root = root_model,

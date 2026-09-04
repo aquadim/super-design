@@ -1,8 +1,9 @@
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GObject, Gio
 import widgets
 import model
+from widgets.Helpers import get_name_factory, create_gio_tree_model
 
 # Текст с привязкой свойств GObject
 # Привязывается к GtkEntry
@@ -142,25 +143,83 @@ class Object:
         self.window.close()
         self.window = None
     
+    def on_clicked(self, src):
+        if self.window != None:
+            self.window.activate()
+        else:
+            self.window = widgets.get_single_object_selector(
+                self.storage_node,
+                self.non_null,
+                self.update_callback, 
+                self.cancel_callback
+            )
+            self.window.present()
+    
     def bind(self, builder, app):
-        def on_clicked(src):
-            if self.window != None:
-                self.window.activate()
-            else:
-                self.window = widgets.get_single_object_selector(
-                    self.storage_node,
-                    self.non_null,
-                    self.update_callback, 
-                    self.cancel_callback
-                )
-                self.window.present()
-
         box = builder.get_object(self.prop_name)
         self.entry = box.get_first_child()
         btn = self.entry.get_next_sibling()
         
         self.update_callback(self.value)
-        btn.connect("clicked", on_clicked)
+        btn.connect("clicked", self.on_clicked)
+
+class ObjectsList:
+    def __init__(self, prop_name, obj, value, storage_node, non_null):
+        self.prop_name = prop_name
+        self.obj = obj
+        self.storage_node = storage_node
+        self.column_view = None
+        self.window = None
+        self.non_null = non_null
+        
+        self.stored_items = Gio.ListStore.new(model.Node)
+        for item in value:
+            self.stored_items.append(item)
+    
+    def update_callback(self, new_value):
+        setattr(self.obj, self.prop_name, new_value)
+        self.stored_items.remove_all()
+        for item in new_value:
+            self.stored_items.append(item)
+    
+    def cancel_callback(self):
+        self.window.close()
+        self.window = None
+
+    def on_clicked(self, src):
+        if self.window == None:
+            self.window = widgets.get_multiple_object_selector(
+                self.storage_node,
+                self.non_null,
+                self.update_callback, 
+                self.cancel_callback
+            )
+        self.window.present()
+    
+    def bind(self, builder, app):
+        # Получение виджетов
+        box = builder.get_object(self.prop_name)
+        sw = box.get_first_child()
+        self.column_view = sw.get_first_child()
+        btn = sw.get_next_sibling()
+        
+        # Создание колонки "Имя"
+        col_name = Gtk.ColumnViewColumn(title="Имя", factory=get_name_factory(False))
+        col_name.set_expand(True)
+        self.column_view.append_column(col_name)
+
+        # Данные
+        tree_model = Gtk.TreeListModel.new(
+            root = self.stored_items,
+            passthrough = False,
+            autoexpand = True,
+            create_func = create_gio_tree_model,
+            user_data = None
+        )
+        selection = Gtk.SingleSelection(model=tree_model)
+        self.column_view.set_model(selection)
+
+        btn.connect("clicked", self.on_clicked)
 
 # Булево
 # Привязывается к GtkCheckBox

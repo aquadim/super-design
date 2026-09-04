@@ -89,6 +89,16 @@ def parse_object(props_obj, tag_name, ns, storage_node):
     _, name = value.split(".")
     return storage_node.name_to_node[name]
 
+# storage - словарь, Имя объекта: ссылка на узел конфигурации
+def parse_multiple_objects(props_obj, tag_name, ns, storage):
+    values = props_obj.find(f"md:{tag_name}", ns)
+    items = values.findall("xr:Item", ns)
+    parsed = []
+    for item in items:
+        _, name = item.text.split(".")
+        parsed.append(storage[name])
+    return parsed
+
 # Загрузка реквизитов объекта
 def collect_attributes(configuration, obj, parent_node, ns):
     child_objects = obj.find("md:ChildObjects", ns)
@@ -112,14 +122,18 @@ def collect_attributes(configuration, obj, parent_node, ns):
 # Загрузка объектов конфигурации
 def collect_objects(p, configuration, collection_name, mdo_name, items, parse_func, ns):
     obj_dir = os.path.join(p, collection_name)
-    collection = []
+    collection = {}
+    xml_props = {}
     for item in items:
         obj_path    = Path(os.path.join(obj_dir, item.text + ".xml"))
         mdo         = ET.parse(obj_path).getroot()
         obj         = mdo.find(f"md:{mdo_name}", ns)
         props       = obj.find("md:Properties", ns)
-        collection.append(parse_func(configuration, obj_path, obj, props, ns))
-    return collection
+        parsed_object = parse_func(configuration, obj_path, obj, props, ns)
+        collection[parsed_object.name] = parsed_object
+        xml_props[parsed_object.name] = props
+
+    return collection, xml_props
 
 
 # Загрузка языков
@@ -179,13 +193,13 @@ def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
             # Неизвестный вид объекта
             # TODO log
             continue
-        node = store_node.id_to_node[item_id]
+        node = store_node.name_to_node[id_parts[1]]
         subsystem.Content.append(node)
 
     # Поиск подчиненных подсистем
     children_xml = obj.find("md:ChildObjects", ns)
     if len(children_xml) > 0:
-        children = collect_objects(
+        children, _ = collect_objects(
             os.path.dirname(get_object_ext_dir(obj_path)),
             configuration,
             "Subsystems",
@@ -194,8 +208,8 @@ def parse_func_Subsystem(configuration, obj_path, obj, props, ns):
             parse_func_Subsystem,
             ns
         )
-        for c in children:
-            subsystem.children.append(c)
+        for k in children:
+            subsystem.children.append(children[k])
 
 
     return subsystem
@@ -217,6 +231,7 @@ def parse_func_Catalog(configuration, obj_path, obj, props, ns):
         parse_localized_string(configuration.store_lang.children, props, "ListPresentation", ns),
         parse_localized_string(configuration.store_lang.children, props, "ExtendedListPresentation", ns),
         parse_localized_string(configuration.store_lang.children, props, "Explanation", ns),
+        parse_enum(props, "SubordinationUse", ns, model.enums.SubordinationUse),
     )
     attributes = collect_attributes(configuration, obj, node, ns)
     if len(attributes) != 0:
@@ -307,7 +322,7 @@ def xml_to_model(p):
 
     # Загрузка справочников
     catalogs_xml = get_dumped_objects(root_children, "Catalog", ns)
-    catalogs = collect_objects(
+    catalogs, catalogs_props = collect_objects(
         p,
         configuration,
         "Catalogs",
@@ -316,12 +331,21 @@ def xml_to_model(p):
         parse_func_Catalog,
         ns
     )
-    for obj in catalogs:
-        configuration.store_catalog.append(obj)
+    for obj_name in catalogs:
+        obj = catalogs[obj_name]
+
+        # Загрузка владельцев для справочника
+        obj.Owners = parse_multiple_objects(
+            catalogs_props[obj_name],
+            "Owners",
+            ns,
+            catalogs,
+        )
+    configuration.store_catalog.set_from_dict(catalogs)
 
     # Загрузка общих модулей
     common_modules_xml = get_dumped_objects(root_children, "CommonModule", ns)
-    common_modules = collect_objects(
+    common_modules, _ = collect_objects(
         p,
         configuration,
         "CommonModules",
@@ -330,12 +354,11 @@ def xml_to_model(p):
         parse_func_CommonModule,
         ns
     )
-    for obj in common_modules:
-        configuration.store_commonmodule.append(obj)
+    configuration.store_commonmodule.set_from_dict(common_modules)
 
     # Загрузка подсистем
     subsystems_xml = get_dumped_objects(root_children, "Subsystem", ns)
-    subsystems = collect_objects(
+    subsystems, _ = collect_objects(
         p,
         configuration,
         "Subsystems",
@@ -344,7 +367,6 @@ def xml_to_model(p):
         parse_func_Subsystem,
         ns
     )
-    for obj in subsystems:
-        configuration.store_subsystem.children.append(obj)
+    configuration.store_subsystem.set_from_dict(subsystems)
 
     return configuration

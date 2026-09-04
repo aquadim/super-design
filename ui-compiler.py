@@ -143,6 +143,35 @@ def spin_button(label, bind, min_value, max_value, step):
 
     return child
 
+# Список объектов
+def objects_list(label, bind):
+    child = etree.Element("child")
+    object = etree.SubElement(child, "object", attrib={"class": "GtkBox"})
+    etree.SubElement(object, "property", attrib={"name": "orientation"}).text = "vertical"
+
+    heading_label(label, object)
+
+    # Коробка со списком и кнопкой "..."
+    box_c = etree.SubElement(object, "child")
+    box_o = etree.SubElement(box_c, "object", attrib={"class": "GtkBox", "id": bind})
+    etree.SubElement(box_o, "property", attrib={"name": "orientation"}).text = "horizontal"
+
+    # Список выбранных объектов
+    sw_column_view_c = etree.SubElement(box_o, "child")
+    sw_column_view_o = etree.SubElement(sw_column_view_c, "object", attrib={"class": "GtkScrolledWindow"})
+    add_property(sw_column_view_o, "height-request", "256")
+
+    column_view_c = etree.SubElement(sw_column_view_o, "child")
+    column_view_o = etree.SubElement(column_view_c, "object", attrib={"class": "GtkColumnView"})
+    add_property(column_view_o, "hexpand", "true")
+
+    # Кнопка "..."
+    btn_c = etree.SubElement(box_o, "child")
+    btn_o = etree.SubElement(btn_c, "object", attrib={"class": "GtkButton"})
+    etree.SubElement(btn_o, "property", attrib={"name": "label"}).text = "..."
+
+    return child
+
 def main():
     files = os.listdir("./ui/properties/")
     for f in files:
@@ -180,6 +209,10 @@ def main():
             elif slot_type == "object":
                 # Объект конфигурации
                 to_replace = entry_and_dots(s.get("label"), s.get("bind"), True)
+            
+            elif slot_type == "objects-list":
+                # Список объектов
+                to_replace = objects_list(s.get("label"), s.get("bind"))
 
             elif slot_type == "bool":
                 # Булево

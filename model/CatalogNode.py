@@ -23,6 +23,7 @@ class CatalogNode(Node):
         ListPresentation,
         ExtendedListPresentation,
         Explanation,
+        SubordinationUse,
     ):
         ID = f"Catalog.{name}"
 
@@ -49,9 +50,14 @@ class CatalogNode(Node):
         self.ListPresentation = ListPresentation
         self.ExtendedListPresentation = ExtendedListPresentation
         self.Explanation = Explanation
+        self.SubordinationUse = SubordinationUse
 
+        # Устанавливается при загрузке программного кода
         self.ObjectModule = None
         self.ManagerModule = None
+
+        # Устанавливается после загрузки всех справочников
+        self.Owners = list()
 
     def get_properties(self, configuration):
         return super().get_properties(configuration) + [
@@ -67,5 +73,6 @@ class CatalogNode(Node):
             p.Localised("Explanation", self, configuration.store_lang, True),
             p.SourceCode("ManagerModule", self, self.ManagerModule),
             p.SourceCode("ObjectModule", self, self.ObjectModule),
-            #p.AttributesProperty(CategoryType.ATTRIBUTES, self, 'store_attribute', self.store_attribute)
+            p.Enum("SubordinationUse", self, self.SubordinationUse),
+            p.ObjectsList("Owners", self, self.Owners, configuration.store_catalog, False),
         ]
